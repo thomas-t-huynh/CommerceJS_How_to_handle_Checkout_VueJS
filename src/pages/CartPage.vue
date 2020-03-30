@@ -13,7 +13,7 @@
       <router-link :to="{ name: 'CheckoutPage'}">
         <button @click="createCheckoutToken" class="btn btn-primary">🔒 Secure Checkout</button>
       </router-link>
-      <h3 class="cartPage-subTotal-amount">Cart Subtotal: $ {{ cartTotal }}</h3>
+      <h3 class="cartPage-subTotal-amount">Cart Subtotal: $ {{ cartSubtotal }}</h3>
     </div>
   </div>
 </template>
@@ -46,7 +46,7 @@ export default {
     ifEmpty() {
       return this.cart.length === 0 ? "Cart is empty" : undefined;
     },
-    cartTotal() {
+    cartSubtotal() {
       return this.cart.reduce(
         (acc, currentEl) => acc + currentEl.quantity * currentEl.price.raw,
         0

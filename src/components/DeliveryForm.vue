@@ -82,8 +82,8 @@
         @change="onChange"
         :disabled="disableStates"
       >
-        <option v-for="(state, i) in states" :value="state" :key="i">{{
-          state
+        <option v-for="(state, i) in Object.keys(states)" :value="state" :key="i">{{
+          states[state]
         }}</option>
       </select>
     </div>
@@ -95,8 +95,8 @@
         name="country"
         @change="onChange"
       >
-        <option v-for="(country, i) in countries" :value="country" :key="i">{{
-          country
+        <option v-for="(country, i) in Object.keys(countries)" :value="country" :key="i">{{
+          countries[country]
         }}</option>
       </select>
     </div>
@@ -114,7 +114,7 @@
 </template>
 
 <script>
-import { states, countries } from "../StatesAndCountries";
+
 export default {
   name: "DeliveryForm",
   methods: {
@@ -122,17 +122,15 @@ export default {
       this.$emit("onChange", e);
     }
   },
-  data() {
-    return {
-      states: states,
-      countries: countries
-    };
-  },
-  props: ["disableStates"],
+  props: ["disableStates", "states", "countries"],
   computed: {
 
   }
 };
 </script>
 
-<style></style>
+<style>
+form {
+    margin-top: 20px;
+}
+</style>

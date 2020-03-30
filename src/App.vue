@@ -16,6 +16,8 @@
         @removeItem="handleRemoveItem"
         @createCheckoutToken="handleCreateCheckoutToken"
 
+        :checkoutToken="checkoutToken"
+        :commerce="commerce"
       />
     </div>
   </div>
@@ -39,7 +41,8 @@ export default {
       products: [],
       productInView: {},
       cart: [],
-      status: undefined
+      status: undefined,
+      checkoutToken: {}
     };
   },
   methods: {
@@ -78,7 +81,10 @@ export default {
     handleCreateCheckoutToken() {
       // Chec needs to update capture a checkout token doc - not id, it's cartId
       this.commerce.checkout.generateToken(this.commerce.cart.cartId, { type: 'cart' })
-        .then(res => console.log(res))
+        .then(res => {
+          console.log(res)
+          this.checkoutToken = res
+        })
         .catch(err => console.log(err))
     }
   },
