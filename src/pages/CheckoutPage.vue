@@ -3,10 +3,13 @@
     <OrderSummary :live="live" />
     <DeliveryForm
       @onChange="handleOnChange"
+      @onShippingChange="setShippingMethod"
       :disableStates="disableStates"
       :states="states"
       :countries="countries"
+      :shippingMethods="shippingMethods"
     />
+    <button class="btn btn-primary">Continue to Payment</button>
   </div>
 </template>
 
@@ -39,10 +42,11 @@ export default {
         zipCode: "",
         state: "",
         country: "",
-        number: ""
+        number: "",
       },
       countries: {},
-      states: {}
+      states: {},
+      shippingMethods: []
     };
   },
   methods: {
@@ -51,18 +55,20 @@ export default {
       this.updateCheckoutSubtotal();
     },
     updateCheckoutSubtotal() {
-      if (
-        this.deliveryForm.country
-      ) {
+      if (this.deliveryForm.country) {
         const { country, zipCode, state } = this.deliveryForm;
-        if (this.deliveryForm.country === "US" && this.deliveryForm.zipCode && this.deliveryForm.state) {
-          this.checkShippingAndTax(country, zipCode, state)
+        if (
+          this.deliveryForm.country === "US" &&
+          this.deliveryForm.zipCode &&
+          this.deliveryForm.state
+        ) {
+          this.checkShippingAndTax(country, zipCode, state);
         } else {
-          this.checkShippingAndTax(country)
+          this.checkShippingAndTax(country);
         }
       }
     },
-    checkShippingAndTax(country, zipCode="", state="") {
+    checkShippingAndTax(country, zipCode = "", state = "") {
       this.commerce.checkout
         .setTaxZone(this.checkoutToken.id, {
           postal_zip_code: zipCode,
@@ -82,11 +88,24 @@ export default {
         })
         .then(res => {
           console.log("shipping", res);
-          this.live = res.live;
+          this.shippingMethods = res
+        })
+        .catch(err => console.log(err));
+    },
+    setShippingMethod(shippingId) {
+      this.commerce.checkout
+        .checkShippingOption(this.checkoutToken.id, {
+          shipping_option_id: shippingId,
+          country: this.deliveryForm.country,
+          region: this.deliveryForm.state
+        })
+        .then(res => {
+          this.live = res.live
         })
         .catch(err => console.log(err));
     }
   },
+
   computed: {
     disableStates() {
       if (this.deliveryForm.country === "US") {
@@ -102,7 +121,7 @@ export default {
       .generateToken(getCartId, { type: "cart" })
       .then(res => {
         this.checkoutToken = res;
-        console.log(res.live)
+        console.log(res.live);
         this.live = res.live;
       })
       .catch(err => console.log(err));

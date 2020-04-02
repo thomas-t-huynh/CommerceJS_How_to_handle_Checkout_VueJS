@@ -85,6 +85,11 @@
       <label for="checkout-number">Phone Number</label>
       <input type="text" class="form-control" id="checkout-number" name="number" @change="onChange">
     </div>
+    <h5 v-if="shippingMethods.length > 0" >Shipping Method</h5>
+    <div v-for="method in shippingMethods" :key="method.id" class="form-check">
+      <input  class="form-check-input" type="radio" :name="method.description" :value="method.id" @change="onShippingChange">
+      <label class="form-check-label" for="exampleRadios1">{{ method.description }}</label>
+    </div>
   </form>
 </template>
 
@@ -94,9 +99,12 @@ export default {
   methods: {
     onChange(e) {
       this.$emit("onChange", e);
+    },
+    onShippingChange(e) {
+      this.$emit("onShippingChange", e.target.value)
     }
   },
-  props: ["disableStates", "states", "countries"]
+  props: ["disableStates", "states", "countries", "shippingMethods"]
 };
 </script>
 
@@ -104,4 +112,9 @@ export default {
 form {
   margin-top: 20px;
 }
+
+.form-check {
+  margin-bottom: 20px;
+}
+
 </style>
