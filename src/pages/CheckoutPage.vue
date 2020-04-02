@@ -1,26 +1,27 @@
 <template>
   <div>
+    <div v-if="status" class="alert alert-danger fade show" role="alert">
+      {{ status }}
+    </div>
     <OrderSummary :live="live" />
-    <DeliveryForm
+    <router-view
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
+      @onSubmit="handleOnSubmit"
       :disableStates="disableStates"
       :states="states"
       :countries="countries"
       :shippingMethods="shippingMethods"
     />
-    <button class="btn btn-primary">Continue to Payment</button>
   </div>
 </template>
 
 <script>
 // subroute - delivery and payment pages
-import DeliveryForm from "../components/DeliveryForm";
 import OrderSummary from "../components/OrderSummary";
 export default {
   name: "CheckoutPage",
   components: {
-    DeliveryForm,
     OrderSummary
   },
   props: {
@@ -43,9 +44,11 @@ export default {
         state: "",
         country: "",
         number: "",
+        shipping: ""
       },
       countries: {},
       states: {},
+      status: "",
       shippingMethods: []
     };
   },
@@ -53,6 +56,19 @@ export default {
     handleOnChange(e) {
       this.deliveryForm[e.target.name] = e.target.value;
       this.updateCheckoutSubtotal();
+    },
+    handleOnSubmit(e) {
+      e.preventDefault()
+      for (let field in this.deliveryForm) {
+        if (this.deliveryForm[field] === "" && field !== "optionalAddress") {
+          window.scrollTo(0,0)
+          console.log(field)
+          this.status = `Required field is missing: ${field}`
+          return
+        }
+      }
+      console.log(this.deliveryForm)
+      this.status = ""
     },
     updateCheckoutSubtotal() {
       if (this.deliveryForm.country) {
@@ -100,12 +116,12 @@ export default {
           region: this.deliveryForm.state
         })
         .then(res => {
+          this.deliveryForm.shipping = shippingId
           this.live = res.live
         })
         .catch(err => console.log(err));
     }
   },
-
   computed: {
     disableStates() {
       if (this.deliveryForm.country === "US") {
@@ -150,4 +166,8 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.alert {
+  margin-top: 20px;
+}
+</style>

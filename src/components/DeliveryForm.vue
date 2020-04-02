@@ -1,5 +1,5 @@
 <template>
-  <form>
+  <form @submit="onSubmit">
     <h3>Customer</h3>
     <div class="form-group">
       <label for="checkout-email">Email address</label>
@@ -7,7 +7,7 @@
     </div>
     <div class="form-group">
       <label for="checkout-fullName">Full name</label>
-      <input type="text" class="form-control" id="checkout-fullName" name="name" @change="onChange">
+      <input type="text" class="form-control" id="checkout-fullName" name="fullName" @change="onChange">
     </div>
 
     <h3>Delivery</h3>
@@ -90,6 +90,7 @@
       <input  class="form-check-input" type="radio" :name="method.description" :value="method.id" @change="onShippingChange">
       <label class="form-check-label" for="exampleRadios1">{{ method.description }}</label>
     </div>
+    <button class="btn btn-primary">Continue to Payment</button>
   </form>
 </template>
 
@@ -102,6 +103,9 @@ export default {
     },
     onShippingChange(e) {
       this.$emit("onShippingChange", e.target.value)
+    },
+    onSubmit(e) {
+      this.$emit("onSubmit", e)
     }
   },
   props: ["disableStates", "states", "countries", "shippingMethods"]

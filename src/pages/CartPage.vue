@@ -8,15 +8,19 @@
       @updateItemQuantity="updateItemQuantity"
       @removeItem="removeItem"
     />
-    <hr>
+    <hr />
     <div class="cartPage-subTotal-div">
-      <router-link v-if="ifEmpty" :to="{ name: 'CheckoutPage', params: { cartId: cart.id } }">
-        <button class="btn btn-primary">🔒 Secure Checkout</button>
-      </router-link>
-      <h3
-        class="cartPage-subTotal-amount"
-        v-if="cart.subtotal"
-      >Cart Subtotal: {{ cart.subtotal.formatted_with_symbol }}</h3>
+      <button
+        v-if="ifEmpty"
+        @click="pushToCheckoutPage"
+        class="btn btn-primary"
+      >
+        🔒 Secure Checkout
+      </button>
+
+      <h3 class="cartPage-subTotal-amount" v-if="cart.subtotal">
+        Cart Subtotal: {{ cart.subtotal.formatted_with_symbol }}
+      </h3>
     </div>
   </div>
 </template>
@@ -43,6 +47,9 @@ export default {
     },
     createCheckoutToken() {
       this.$emit("createCheckoutToken");
+    },
+    pushToCheckoutPage() {
+      this.$router.push(`/checkout/${this.cart.id}/deliveryform`);
     }
   },
   computed: {
@@ -79,4 +86,3 @@ button {
   width: 175px;
 }
 </style>
-

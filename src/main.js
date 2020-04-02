@@ -7,6 +7,8 @@ import CartPage from "./pages/CartPage.vue";
 import ProductViewPage from "./pages/ProductViewPage.vue";
 import ProductsPage from "./pages/ProductsPage.vue";
 import CheckoutPage from "./pages/CheckoutPage.vue";
+import DeliveryForm from "./components/DeliveryForm";
+import PaymentForm from "./components/PaymentForm.vue";
 
 Vue.use(VueRouter);
 
@@ -38,7 +40,17 @@ const router = new VueRouter({
     {
       path: "/checkout/:cartId",
       name: "CheckoutPage",
-      component: CheckoutPage
+      component: CheckoutPage,
+      children: [
+        {
+          path: 'deliveryform',
+          component: DeliveryForm
+        },
+        {
+          path: 'paymentform',
+          component: PaymentForm
+        }
+      ]
     }
   ]
 });
