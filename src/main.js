@@ -15,7 +15,7 @@ Vue.config.productionTip = false;
 // Pass in your own API key to list out your own products.
 const API_KEY = "pk_test_17958b576e2ba6850e3191cf217db928655e7e63d4c7b";
 
-const commerce = new Commerce(API_KEY, false);
+const commerce = new Commerce(API_KEY, true);
 
 const router = new VueRouter({
   linkExactActiveClass: "active",
@@ -36,7 +36,7 @@ const router = new VueRouter({
       component: CartPage
     },
     {
-      path: "/checkout",
+      path: "/checkout/:cartId",
       name: "CheckoutPage",
       component: CheckoutPage
     }

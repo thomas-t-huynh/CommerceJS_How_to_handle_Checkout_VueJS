@@ -2,9 +2,15 @@
   <div>
     <div v-if="status" class="alert alert-success alert-dismissible fade show" role="alert">
       {{ status }}
-    <button @click="removeStatus" type="button" class="close" data-dismiss="alert" aria-label="Close">
-      <span aria-hidden="true">&times;</span>
-    </button>
+      <button
+        @click="removeStatus"
+        type="button"
+        class="close"
+        data-dismiss="alert"
+        aria-label="Close"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
     </div>
     <div class="container">
       <div>
@@ -37,7 +43,7 @@ export default {
       this.$emit("addProductToCart", this.productInView);
     },
     removeStatus() {
-      this.$emit("removeStatus")
+      this.$emit("removeStatus");
     }
   }
 };

@@ -1,7 +1,12 @@
 <template>
   <div>
-    <DeliveryForm @onChange="handleOnChange" :disableStates="disableStates" :states="states" :countries="countries" />
-    <OrderSummary />
+    <OrderSummary :live="live" />
+    <DeliveryForm
+      @onChange="handleOnChange"
+      :disableStates="disableStates"
+      :states="states"
+      :countries="countries"
+    />
   </div>
 </template>
 
@@ -16,15 +21,14 @@ export default {
     OrderSummary
   },
   props: {
-    checkoutToken: {
-      type: Object
-    },
     commerce: {
       type: Object
     }
   },
   data() {
     return {
+      checkoutToken: {},
+      live: {},
       deliveryForm: {
         email: "",
         fullName: "",
@@ -44,17 +48,43 @@ export default {
   methods: {
     handleOnChange(e) {
       this.deliveryForm[e.target.name] = e.target.value;
-      this.updateCheckoutSubtotal(e.target.name);
+      this.updateCheckoutSubtotal();
     },
-    updateCheckoutSubtotal(param) {
-      if (param === "country" || param === "zipCode" || param == "state") {
-        const { country, zipCode, state } = this.deliveryForm
-        this.commerce.checkout.setTaxZone(this.checkoutToken.id, {
-          postal_zip_code: zipCode, country: country, region: state
-        })
-        .then(res => console.log(res))
-        .catch(err => console.log(err))
+    updateCheckoutSubtotal() {
+      if (
+        this.deliveryForm.country
+      ) {
+        const { country, zipCode, state } = this.deliveryForm;
+        if (this.deliveryForm.country === "US" && this.deliveryForm.zipCode && this.deliveryForm.state) {
+          this.checkShippingAndTax(country, zipCode, state)
+        } else {
+          this.checkShippingAndTax(country)
+        }
       }
+    },
+    checkShippingAndTax(country, zipCode="", state="") {
+      this.commerce.checkout
+        .setTaxZone(this.checkoutToken.id, {
+          postal_zip_code: zipCode,
+          country: country,
+          region: state
+        })
+        .then(res => {
+          console.log("tax", res);
+          this.live = res.live;
+        })
+        .catch(err => console.log(err));
+
+      this.commerce.checkout
+        .getShippingOptions(this.checkoutToken.id, {
+          country: country,
+          region: state
+        })
+        .then(res => {
+          console.log("shipping", res);
+          this.live = res.live;
+        })
+        .catch(err => console.log(err));
     }
   },
   computed: {
@@ -66,17 +96,37 @@ export default {
     }
   },
   created() {
-    this.commerce.services.localeListCountries(this.checkoutToken.id)
-    .then(res => {
-      this.countries = res.countries
-    })
-    .catch(err => console.log(err))
+    // idea - include cartId in url to find cart upon refresh
+    const getCartId = this.$route.params.cartId;
+    this.commerce.checkout
+      .generateToken(getCartId, { type: "cart" })
+      .then(res => {
+        this.checkoutToken = res;
+        console.log(res.live)
+        this.live = res.live;
+      })
+      .catch(err => console.log(err));
 
-    this.commerce.services.localeListSubdivisions("US")
-    .then(res => {
-      this.states = res.subdivisions
-    })
-    .catch(err => console.log(err))
+    // this.commerce.checkout
+    //   .getLocationFromIP(this.checkoutToken.id)
+    //   .then(res => {
+    //     console.log(res)
+    //   })
+    //   .catch(err => console.log(err))
+
+    this.commerce.services
+      .localeListCountries(this.checkoutToken.id)
+      .then(res => {
+        this.countries = res.countries;
+      })
+      .catch(err => console.log(err));
+
+    this.commerce.services
+      .localeListSubdivisions("US")
+      .then(res => {
+        this.states = res.subdivisions;
+      })
+      .catch(err => console.log(err));
   }
 };
 </script>

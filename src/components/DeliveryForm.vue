@@ -3,23 +3,11 @@
     <h3>Customer</h3>
     <div class="form-group">
       <label for="checkout-email">Email address</label>
-      <input
-        type="email"
-        class="form-control"
-        id="checkout-email"
-        name="email"
-        @change="onChange"
-      />
+      <input type="email" class="form-control" id="checkout-email" name="email" @change="onChange">
     </div>
     <div class="form-group">
       <label for="checkout-fullName">Full name</label>
-      <input
-        type="text"
-        class="form-control"
-        id="checkout-fullName"
-        name="name"
-        @change="onChange"
-      />
+      <input type="text" class="form-control" id="checkout-fullName" name="name" @change="onChange">
     </div>
 
     <h3>Delivery</h3>
@@ -31,7 +19,7 @@
         id="checkout-recipient"
         name="recipient"
         @change="onChange"
-      />
+      >
     </div>
     <div class="form-group">
       <label for="checkout-address">Street Address</label>
@@ -41,7 +29,7 @@
         id="checkout-address"
         name="address"
         @change="onChange"
-      />
+      >
     </div>
     <div class="form-group">
       <label for="checkout-optionalAddress">Apt, Suite, etc. (Optional)</label>
@@ -51,17 +39,11 @@
         id="checkout-optionalAddress"
         name="optionalAddress"
         @change="onChange"
-      />
+      >
     </div>
     <div class="form-group">
       <label for="checkout-city">City</label>
-      <input
-        type="text"
-        class="form-control"
-        id="checkout-city"
-        name="city"
-        @change="onChange"
-      />
+      <input type="text" class="form-control" id="checkout-city" name="city" @change="onChange">
     </div>
     <div class="form-group">
       <label for="checkout-zipCode">Zip Code</label>
@@ -71,7 +53,7 @@
         id="checkout-zipCode"
         name="zipCode"
         @change="onChange"
-      />
+      >
     </div>
     <div class="form-group">
       <label for="checkout-states">State</label>
@@ -82,39 +64,31 @@
         @change="onChange"
         :disabled="disableStates"
       >
-        <option v-for="(state, i) in Object.keys(states)" :value="state" :key="i">{{
+        <option v-for="(state, i) in Object.keys(states)" :value="state" :key="i">
+          {{
           states[state]
-        }}</option>
+          }}
+        </option>
       </select>
     </div>
     <div class="form-group">
       <label for="checkout-country">Country</label>
-      <select
-        class="form-control"
-        id="checkout-country"
-        name="country"
-        @change="onChange"
-      >
-        <option v-for="(country, i) in Object.keys(countries)" :value="country" :key="i">{{
+      <select class="form-control" id="checkout-country" name="country" @change="onChange">
+        <option v-for="(country, i) in Object.keys(countries)" :value="country" :key="i">
+          {{
           countries[country]
-        }}</option>
+          }}
+        </option>
       </select>
     </div>
     <div class="form-group">
       <label for="checkout-number">Phone Number</label>
-      <input
-        type="text"
-        class="form-control"
-        id="checkout-number"
-        name="number"
-        @change="onChange"
-      />
+      <input type="text" class="form-control" id="checkout-number" name="number" @change="onChange">
     </div>
   </form>
 </template>
 
 <script>
-
 export default {
   name: "DeliveryForm",
   methods: {
@@ -122,15 +96,12 @@ export default {
       this.$emit("onChange", e);
     }
   },
-  props: ["disableStates", "states", "countries"],
-  computed: {
-
-  }
+  props: ["disableStates", "states", "countries"]
 };
 </script>
 
 <style>
 form {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 </style>

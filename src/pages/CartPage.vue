@@ -1,19 +1,22 @@
 <template>
   <div>
-    <h2>{{ ifEmpty }}</h2>
+    <h2 class="cartPage-empty-h2" v-if="cart.line_items">Cart is Empty</h2>
     <CartItem
-      v-for="product in cart"
+      v-for="product in cart.line_items"
       :product="product"
       :key="product.id"
       @updateItemQuantity="updateItemQuantity"
       @removeItem="removeItem"
     />
-    <hr>  
+    <hr>
     <div class="cartPage-subTotal-div">
-      <router-link :to="{ name: 'CheckoutPage'}">
-        <button @click="createCheckoutToken" class="btn btn-primary">🔒 Secure Checkout</button>
+      <router-link v-if="ifEmpty" :to="{ name: 'CheckoutPage', params: { cartId: cart.id } }">
+        <button class="btn btn-primary">🔒 Secure Checkout</button>
       </router-link>
-      <h3 class="cartPage-subTotal-amount">Cart Subtotal: $ {{ cartSubtotal }}</h3>
+      <h3
+        class="cartPage-subTotal-amount"
+        v-if="cart.subtotal"
+      >Cart Subtotal: {{ cart.subtotal.formatted_with_symbol }}</h3>
     </div>
   </div>
 </template>
@@ -28,7 +31,7 @@ export default {
   },
   props: {
     cart: {
-      type: Array
+      type: Object
     }
   },
   methods: {
@@ -39,24 +42,21 @@ export default {
       this.$emit("removeItem", id);
     },
     createCheckoutToken() {
-      this.$emit("createCheckoutToken")
+      this.$emit("createCheckoutToken");
     }
   },
   computed: {
     ifEmpty() {
-      return this.cart.length === 0 ? "Cart is empty" : undefined;
-    },
-    cartSubtotal() {
-      return this.cart.reduce(
-        (acc, currentEl) => acc + currentEl.quantity * currentEl.price.raw,
-        0
-      );
+      return this.cart.line_items.length > 0 ? true : false;
     }
   }
 };
 </script>
 
 <style scoped>
+.cartPage-empty-h2 {
+  margin: 10px 0;
+}
 
 .cartPage-subTotal-amount {
   margin: 10px 0;
@@ -78,6 +78,5 @@ export default {
 button {
   width: 175px;
 }
-
 </style>
 

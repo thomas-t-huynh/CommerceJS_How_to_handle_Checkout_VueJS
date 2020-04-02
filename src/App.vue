@@ -5,18 +5,14 @@
       <router-view
         :products="products"
         @viewProduct="handleViewProduct"
-
         :productInView="productInView"
         :status="status"
         @removeStatus="handleRemoveStatus"
         @addProductToCart="handleAddProductToCart"
-
         :cart="cart"
         @updateItemQuantity="handleUpdateItemQuantity"
         @removeItem="handleRemoveItem"
-        @createCheckoutToken="handleCreateCheckoutToken"
-
-        :checkoutToken="checkoutToken"
+        :cartId="cart.id"
         :commerce="commerce"
       />
     </div>
@@ -40,9 +36,8 @@ export default {
     return {
       products: [],
       productInView: {},
-      cart: [],
-      status: undefined,
-      checkoutToken: {}
+      cart: {},
+      status: undefined
     };
   },
   methods: {
@@ -54,7 +49,7 @@ export default {
       this.commerce.cart
         .update(id, { quantity })
         .then(res => {
-          this.cart = res.cart.line_items;
+          this.cart = res.cart;
         })
         .catch(err => console.log(err));
     },
@@ -62,7 +57,7 @@ export default {
       this.commerce.cart
         .remove(id)
         .then(res => {
-          this.cart = res.cart.line_items;
+          this.cart = res.cart;
         })
         .catch(err => console.log(err));
     },
@@ -70,22 +65,13 @@ export default {
       this.commerce.cart
         .add(product.id)
         .then(res => {
-          this.status = "Item added to cart!";
-          this.cart = res.cart.line_items;
+          this.status = "item successfully added to cart!";
+          this.cart = res.cart;
         })
         .catch(err => console.log(err));
     },
     handleRemoveStatus() {
-      this.status = undefined
-    },
-    handleCreateCheckoutToken() {
-      // Chec needs to update capture a checkout token doc - not id, it's cartId
-      this.commerce.checkout.generateToken(this.commerce.cart.cartId, { type: 'cart' })
-        .then(res => {
-          console.log(res)
-          this.checkoutToken = res
-        })
-        .catch(err => console.log(err))
+      this.status = undefined;
     }
   },
   created() {
@@ -102,15 +88,14 @@ export default {
       .then(res => {
         this.products = res.data;
       })
-      .catch(err => console.log(err))
-      .then(() => {
-        this.commerce.cart
-          .retrieve()
-          .then(res => {
-            this.cart = res.line_items;
-          })
-          .catch(err => console.log(err));
-      });
+      .catch(err => console.log(err));
+
+    this.commerce.cart
+      .retrieve()
+      .then(res => {
+        this.cart = res;
+      })
+      .catch(err => console.log(err));
   }
 };
 </script>
@@ -125,5 +110,4 @@ export default {
     width: 100%;
   }
 }
-
 </style>
