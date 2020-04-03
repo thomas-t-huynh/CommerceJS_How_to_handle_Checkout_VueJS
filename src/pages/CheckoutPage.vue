@@ -1,9 +1,7 @@
 <template>
   <div>
-    <div v-if="status" class="alert alert-danger fade show" role="alert">
-      {{ status }}
-    </div>
-    <OrderSummary :live="live" />
+    <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
+    <OrderSummary :live="live"/>
     <router-view
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
@@ -19,6 +17,7 @@
 <script>
 // subroute - delivery and payment pages
 import OrderSummary from "../components/OrderSummary";
+import CreditCard from "creditcard.js";
 export default {
   name: "CheckoutPage",
   components: {
@@ -33,19 +32,9 @@ export default {
     return {
       checkoutToken: {},
       live: {},
-      deliveryForm: {
-        email: "",
-        full_name: "",
-        recipient: "",
-        address: "",
-        optional_address: "",
-        city: "",
-        zip_code: "",
-        state: "",
-        country: "",
-        number: "",
-        shipping: ""
-      },
+      validator: new CreditCard(),
+      deliveryForm: {},
+      paymentForm: {},
       countries: {},
       states: {},
       status: "",
@@ -54,22 +43,28 @@ export default {
   },
   methods: {
     handleOnChange(e) {
-      this.deliveryForm[e.target.name] = e.target.value;
-      this.updateCheckoutSubtotal();
+      const { form, name, value } = e.target;
+      this[form.name][name] = value
+      form.name === "deliveryForm" && this.updateCheckoutSubtotal();
     },
     handleOnSubmit(e) {
-      e.preventDefault()
-      for (let field in this.deliveryForm) {
-        if (this.deliveryForm[field] === "" && field !== "optional_address") {
-          window.scrollTo(0,0)
-          console.log(field)
-          const fieldName = (field.charAt(0).toUpperCase() + field.slice(1)).replace("_", " ")
-          this.status = `Required field is missing: ${fieldName}`
-          return
-        }
+      e.preventDefault();
+      // for (let field in this.deliveryForm) {
+      //   if (this.deliveryForm[field] === "" && field !== "optionalAddress") {
+      //     window.scrollTo(0, 0);
+      //     console.log(field);
+      //     this.status = `Required field is missing: ${field}`;
+      //     return;
+      //   }
+      // }
+      if (e.target.name === "deliveryForm") {
+        console.log(this.deliveryForm)
+        this.$router.push(`/checkout/${this.$route.params.cartId}/paymentform`);
+      } else {
+        console.log(this.paymentForm)
+        console.log(this.validator.getCreditCardNameByNumber(this.paymentForm.number))
       }
-      console.log(this.deliveryForm)
-      this.status = ""
+      // this.status = "";
     },
     updateCheckoutSubtotal() {
       if (this.deliveryForm.country) {
@@ -105,7 +100,7 @@ export default {
         })
         .then(res => {
           console.log("shipping", res);
-          this.shippingMethods = res
+          this.shippingMethods = res;
         })
         .catch(err => console.log(err));
     },
@@ -117,8 +112,8 @@ export default {
           region: this.deliveryForm.state
         })
         .then(res => {
-          this.deliveryForm.shipping = shippingId
-          this.live = res.live
+          this.deliveryForm.shipping = shippingId;
+          this.live = res.live;
         })
         .catch(err => console.log(err));
     }
@@ -153,14 +148,14 @@ export default {
     this.commerce.services
       .localeListCountries(this.checkoutToken.id)
       .then(res => {
-        this.countries = res.countries;
+        this.countries = { "": "Select a country", ...res.countries };
       })
       .catch(err => console.log(err));
 
     this.commerce.services
       .localeListSubdivisions("US")
       .then(res => {
-        this.states = res.subdivisions;
+        this.states = { "": "Select a state", ...res.subdivisions };
       })
       .catch(err => console.log(err));
   }
