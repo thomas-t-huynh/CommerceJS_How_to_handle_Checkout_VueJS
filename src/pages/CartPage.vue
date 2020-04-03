@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="cartPage-empty-h2" v-if="cart.line_items">Cart is Empty</h2>
+    <h2 class="cartPage-empty-h2" v-if="!ifEmpty">Cart is Empty</h2>
     <CartItem
       v-for="product in cart.line_items"
       :product="product"
@@ -8,19 +8,14 @@
       @updateItemQuantity="updateItemQuantity"
       @removeItem="removeItem"
     />
-    <hr />
+    <hr>
     <div class="cartPage-subTotal-div">
-      <button
-        v-if="ifEmpty"
-        @click="pushToCheckoutPage"
-        class="btn btn-primary"
-      >
-        🔒 Secure Checkout
-      </button>
+      <button v-if="ifEmpty" @click="pushToCheckoutPage" class="btn btn-primary">🔒 Secure Checkout</button>
 
-      <h3 class="cartPage-subTotal-amount" v-if="cart.subtotal">
-        Cart Subtotal: {{ cart.subtotal.formatted_with_symbol }}
-      </h3>
+      <h3
+        class="cartPage-subTotal-amount"
+        v-if="cart.subtotal"
+      >Cart Subtotal: {{ cart.subtotal.formatted_with_symbol }}</h3>
     </div>
   </div>
 </template>
