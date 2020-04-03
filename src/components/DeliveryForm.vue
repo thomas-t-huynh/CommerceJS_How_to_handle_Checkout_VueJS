@@ -6,8 +6,8 @@
       <input type="email" class="form-control" id="checkout-email" name="email" @change="onChange">
     </div>
     <div class="form-group">
-      <label for="checkout-fullName">Full name</label>
-      <input type="text" class="form-control" id="checkout-fullName" name="fullName" @change="onChange">
+      <label for="checkout-full_name">Full name</label>
+      <input type="text" class="form-control" id="checkout-full_name" name="full_name" @change="onChange">
     </div>
 
     <h3>Delivery</h3>
@@ -32,12 +32,12 @@
       >
     </div>
     <div class="form-group">
-      <label for="checkout-optionalAddress">Apt, Suite, etc. (Optional)</label>
+      <label for="checkout-optional_address">Apt, Suite, etc. (Optional)</label>
       <input
         type="text"
         class="form-control"
-        id="checkout-optionalAddress"
-        name="optionalAddress"
+        id="checkout-optional_address"
+        name="optional_address"
         @change="onChange"
       >
     </div>
@@ -46,12 +46,12 @@
       <input type="text" class="form-control" id="checkout-city" name="city" @change="onChange">
     </div>
     <div class="form-group">
-      <label for="checkout-zipCode">Zip Code</label>
+      <label for="checkout-zip_code">Zip Code</label>
       <input
         type="text"
         class="form-control"
-        id="checkout-zipCode"
-        name="zipCode"
+        id="checkout-zip_code"
+        name="zip_code"
         @change="onChange"
       >
     </div>

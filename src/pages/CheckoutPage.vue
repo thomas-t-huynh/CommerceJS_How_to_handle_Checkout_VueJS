@@ -35,12 +35,12 @@ export default {
       live: {},
       deliveryForm: {
         email: "",
-        fullName: "",
+        full_name: "",
         recipient: "",
         address: "",
-        optionalAddress: "",
+        optional_address: "",
         city: "",
-        zipCode: "",
+        zip_code: "",
         state: "",
         country: "",
         number: "",
@@ -60,10 +60,11 @@ export default {
     handleOnSubmit(e) {
       e.preventDefault()
       for (let field in this.deliveryForm) {
-        if (this.deliveryForm[field] === "" && field !== "optionalAddress") {
+        if (this.deliveryForm[field] === "" && field !== "optional_address") {
           window.scrollTo(0,0)
           console.log(field)
-          this.status = `Required field is missing: ${field}`
+          const fieldName = (field.charAt(0).toUpperCase() + field.slice(1)).replace("_", " ")
+          this.status = `Required field is missing: ${fieldName}`
           return
         }
       }
@@ -72,22 +73,22 @@ export default {
     },
     updateCheckoutSubtotal() {
       if (this.deliveryForm.country) {
-        const { country, zipCode, state } = this.deliveryForm;
+        const { country, zip_code, state } = this.deliveryForm;
         if (
           this.deliveryForm.country === "US" &&
-          this.deliveryForm.zipCode &&
+          this.deliveryForm.zip_code &&
           this.deliveryForm.state
         ) {
-          this.checkShippingAndTax(country, zipCode, state);
+          this.checkShippingAndTax(country, zip_code, state);
         } else {
           this.checkShippingAndTax(country);
         }
       }
     },
-    checkShippingAndTax(country, zipCode = "", state = "") {
+    checkShippingAndTax(country, zip_code = "", state = "") {
       this.commerce.checkout
         .setTaxZone(this.checkoutToken.id, {
-          postal_zip_code: zipCode,
+          postal_zip_code: zip_code,
           country: country,
           region: state
         })
