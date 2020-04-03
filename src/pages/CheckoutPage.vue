@@ -1,7 +1,9 @@
 <template>
   <div>
-    <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
-    <OrderSummary :live="live"/>
+    <OrderSummary :live="live" />
+    <div v-if="status" class="alert alert-danger fade show" role="alert">
+      {{ status }}
+    </div>
     <router-view
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
@@ -29,12 +31,17 @@ export default {
     }
   },
   data() {
+    const dummyData = {
+      number: "4242424242424242",
+      expire: "11/11",
+      cvc: "111"
+    };
     return {
       checkoutToken: {},
       live: {},
       validator: new CreditCard(),
       deliveryForm: {},
-      paymentForm: {},
+      paymentForm: dummyData,
       countries: {},
       states: {},
       status: "",
@@ -44,27 +51,30 @@ export default {
   methods: {
     handleOnChange(e) {
       const { form, name, value } = e.target;
-      this[form.name][name] = value
+      this[form.name][name] = value;
       form.name === "deliveryForm" && this.updateCheckoutSubtotal();
     },
     handleOnSubmit(e) {
       e.preventDefault();
-      // for (let field in this.deliveryForm) {
-      //   if (this.deliveryForm[field] === "" && field !== "optionalAddress") {
-      //     window.scrollTo(0, 0);
-      //     console.log(field);
-      //     this.status = `Required field is missing: ${field}`;
-      //     return;
-      //   }
-      // }
       if (e.target.name === "deliveryForm") {
-        console.log(this.deliveryForm)
         this.$router.push(`/checkout/${this.$route.params.cartId}/paymentform`);
       } else {
-        console.log(this.paymentForm)
-        console.log(this.validator.getCreditCardNameByNumber(this.paymentForm.number))
+        const isValidated = this.validator.isValid(this.paymentForm.number);
+        if (isValidated) {
+          this.status = "";
+          let spacedNumber = this.paymentForm.number.split("")
+          for (var i = 0; i < 3; i++) {
+            spacedNumber.splice(((i+1) * 4) + i, 0, " ")
+          }
+          this.paymentForm.number = spacedNumber.join("")
+          const splitExpire = this.paymentForm.expire.split("/")
+          this.paymentForm = {...this.paymentForm, expiry_month: splitExpire[0], expiry_year: splitExpire[1]}
+          console.log(this.paymentForm)
+          this.handleCaptureToken();
+        } else {
+          this.status = "The card number you entered is invalid.";
+        }
       }
-      // this.status = "";
     },
     updateCheckoutSubtotal() {
       if (this.deliveryForm.country) {
@@ -112,18 +122,58 @@ export default {
           region: this.deliveryForm.state
         })
         .then(res => {
-          this.deliveryForm.shipping = shippingId;
+          this.deliveryForm.shipping_method = shippingId;
           this.live = res.live;
         })
         .catch(err => console.log(err));
+    },
+    handleCaptureToken() {
+      let line_items = {};
+      this.live.line_items.forEach(item => {
+        line_items[item.id] = { "quantity": item.quantity}
+      })
+      // console.log('lineitems',line_items);
+      const df = this.deliveryForm
+      const pf = this.paymentForm
+      const data = {
+        line_items,
+        customer: {
+          firstname: df.firstname,
+          lastname: df.lastname,
+          email: df.email
+        },
+        shipping: {
+          name: df.recipient,
+          street: df.street,
+          town_city: df.town_city,
+          county_state: df.state,
+          postal_zip_code: df.zip_code,
+          country: df.country
+        },
+        fulfillment: {
+          shipping_method: df.shipping_method
+        },
+        payment: {
+          gateway: 'test_gateway',
+          card: {
+            number: pf.number,
+            expiry_month: pf.expiry_month,
+            expiry_year: pf.expiry_year,
+            cvc: pf.cvc,
+            postal_zip_code: df.zip_code,
+          }
+        }
+      }
+      this.commerce.checkout.capture(this.checkoutToken.id, data)
+      .then(res => {
+        console.log(res)
+      })
+      .catch(err => console.log(err))
     }
   },
   computed: {
     disableStates() {
-      if (this.deliveryForm.country === "US") {
-        return false;
-      }
-      return true;
+      return this.deliveryForm.country === "US" ? true : false;
     }
   },
   created() {
@@ -133,17 +183,10 @@ export default {
       .generateToken(getCartId, { type: "cart" })
       .then(res => {
         this.checkoutToken = res;
-        console.log(res.live);
+        console.log(res);
         this.live = res.live;
       })
       .catch(err => console.log(err));
-
-    // this.commerce.checkout
-    //   .getLocationFromIP(this.checkoutToken.id)
-    //   .then(res => {
-    //     console.log(res)
-    //   })
-    //   .catch(err => console.log(err))
 
     this.commerce.services
       .localeListCountries(this.checkoutToken.id)
