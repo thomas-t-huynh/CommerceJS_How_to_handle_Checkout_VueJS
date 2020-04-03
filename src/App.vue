@@ -12,8 +12,8 @@
         :cart="cart"
         @updateItemQuantity="handleUpdateItemQuantity"
         @removeItem="handleRemoveItem"
-        :cartId="cart.id"
         :commerce="commerce"
+        @getNewCart="handleGetNewCart"
       />
     </div>
   </div>
@@ -72,6 +72,14 @@ export default {
     },
     handleRemoveStatus() {
       this.status = undefined;
+    },
+    handleGetNewCart() {
+      this.commerce.cart
+        .retrieve()
+        .then(res => {
+          this.cart = res;
+        })
+        .catch(err => console.log(err));
     }
   },
   created() {

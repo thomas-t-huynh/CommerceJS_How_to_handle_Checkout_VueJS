@@ -1,9 +1,7 @@
 <template>
   <div>
-    <OrderSummary :live="live" />
-    <div v-if="status" class="alert alert-danger fade show" role="alert">
-      {{ status }}
-    </div>
+    <OrderSummary :live="live"/>
+    <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
     <router-view
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
@@ -12,12 +10,12 @@
       :states="states"
       :countries="countries"
       :shippingMethods="shippingMethods"
+      :receipt="receipt"
     />
   </div>
 </template>
 
 <script>
-// subroute - delivery and payment pages
 import OrderSummary from "../components/OrderSummary";
 import CreditCard from "creditcard.js";
 export default {
@@ -31,7 +29,7 @@ export default {
     }
   },
   data() {
-    const dummyData = {
+    const dummyPayment = {
       number: "4242424242424242",
       expire: "11/11",
       cvc: "111"
@@ -41,11 +39,12 @@ export default {
       live: {},
       validator: new CreditCard(),
       deliveryForm: {},
-      paymentForm: dummyData,
+      paymentForm: dummyPayment,
       countries: {},
       states: {},
       status: "",
-      shippingMethods: []
+      shippingMethods: [],
+      receipt: {}
     };
   },
   methods: {
@@ -57,20 +56,18 @@ export default {
     handleOnSubmit(e) {
       e.preventDefault();
       if (e.target.name === "deliveryForm") {
-        this.$router.push(`/checkout/${this.$route.params.cartId}/paymentform`);
+        this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
       } else {
         const isValidated = this.validator.isValid(this.paymentForm.number);
         if (isValidated) {
           this.status = "";
-          let spacedNumber = this.paymentForm.number.split("")
+          let spacedNumber = this.paymentForm.number.split("");
           for (var i = 0; i < 3; i++) {
-            spacedNumber.splice(((i+1) * 4) + i, 0, " ")
+            spacedNumber.splice((i + 1) * 4 + i, 0, " ");
           }
-          this.paymentForm.number = spacedNumber.join("")
-          const splitExpire = this.paymentForm.expire.split("/")
-          this.paymentForm = {...this.paymentForm, expiry_month: splitExpire[0], expiry_year: splitExpire[1]}
-          console.log(this.paymentForm)
-          this.handleCaptureToken();
+          spacedNumber = spacedNumber.join("");
+          const splitExpire = this.paymentForm.expire.split("/");
+          this.handleCaptureToken(spacedNumber, splitExpire[0], splitExpire[1]);
         } else {
           this.status = "The card number you entered is invalid.";
         }
@@ -127,14 +124,14 @@ export default {
         })
         .catch(err => console.log(err));
     },
-    handleCaptureToken() {
+    handleCaptureToken(number, month, year) {
       let line_items = {};
       this.live.line_items.forEach(item => {
-        line_items[item.id] = { "quantity": item.quantity}
-      })
+        line_items[item.id] = { quantity: item.quantity };
+      });
       // console.log('lineitems',line_items);
-      const df = this.deliveryForm
-      const pf = this.paymentForm
+      const df = this.deliveryForm;
+      const pf = this.paymentForm;
       const data = {
         line_items,
         customer: {
@@ -154,21 +151,25 @@ export default {
           shipping_method: df.shipping_method
         },
         payment: {
-          gateway: 'test_gateway',
+          gateway: "test_gateway",
           card: {
-            number: pf.number,
-            expiry_month: pf.expiry_month,
-            expiry_year: pf.expiry_year,
+            number: number,
+            expiry_month: month,
+            expiry_year: year,
             cvc: pf.cvc,
-            postal_zip_code: df.zip_code,
+            postal_zip_code: df.zip_code
           }
         }
-      }
-      this.commerce.checkout.capture(this.checkoutToken.id, data)
-      .then(res => {
-        console.log(res)
-      })
-      .catch(err => console.log(err))
+      };
+      this.commerce.checkout
+        .capture(this.checkoutToken.id, data)
+        .then(res => {
+          console.log(res);
+          this.receipt = res;
+          this.$router.push(`/checkout/${res.id}/confirmation`);
+          this.$emit("getNewCart");
+        })
+        .catch(err => console.log(err));
     }
   },
   computed: {
@@ -178,7 +179,8 @@ export default {
   },
   created() {
     // idea - include cartId in url to find cart upon refresh
-    const getCartId = this.$route.params.cartId;
+    // is generatin a token everytime isntead of grabbing an existing token okay?
+    const getCartId = this.$route.params.id;
     this.commerce.checkout
       .generateToken(getCartId, { type: "cart" })
       .then(res => {

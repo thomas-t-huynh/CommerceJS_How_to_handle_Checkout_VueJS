@@ -2,9 +2,9 @@
   <div class="card orderSummary-card">
     <div class="card-body">
       <h4 class="card-title">Order Summary</h4>
-      <hr/>
-      <OrderSummaryItem v-for="item in live.line_items" :item="item" :key="item.id" />
-      <hr/>
+      <hr>
+      <OrderSummaryItem v-for="item in live.line_items" :item="item" :key="item.id"/>
+      <hr>
       <div class="d-flex justify-content-between">
         <p>Subtotal</p>
         <p>{{ live.subtotal.formatted_with_symbol }}</p>
@@ -17,7 +17,7 @@
         <p>Tax</p>
         <p>{{ live.tax.amount.formatted_with_symbol }}</p>
       </div>
-      <hr />
+      <hr>
       <div class="d-flex justify-content-between">
         <h5>Total with Tax</h5>
         <h5>{{ live.total_with_tax.formatted_with_symbol }}</h5>
@@ -41,5 +41,4 @@ export default {
 .orderSummary-card {
   margin: 20px 0;
 }
-
 </style>

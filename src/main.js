@@ -9,6 +9,7 @@ import ProductsPage from "./pages/ProductsPage.vue";
 import CheckoutPage from "./pages/CheckoutPage.vue";
 import DeliveryForm from "./components/DeliveryForm";
 import PaymentForm from "./components/PaymentForm.vue";
+import Confirmation from "./components/Confirmation.vue";
 
 Vue.use(VueRouter);
 
@@ -38,17 +39,21 @@ const router = new VueRouter({
       component: CartPage
     },
     {
-      path: "/checkout/:cartId",
+      path: "/checkout/:id",
       name: "CheckoutPage",
       component: CheckoutPage,
       children: [
         {
-          path: 'deliveryform',
+          path: "deliveryform",
           component: DeliveryForm
         },
         {
-          path: 'paymentform',
+          path: "paymentform",
           component: PaymentForm
+        },
+        {
+          path: "confirmation",
+          component: Confirmation
         }
       ]
     }
