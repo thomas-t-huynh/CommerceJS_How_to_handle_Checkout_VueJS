@@ -6,6 +6,7 @@
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
       @onSubmit="handleOnSubmit"
+      :live="live"
       :disableStates="disableStates"
       :states="states"
       :countries="countries"
@@ -38,7 +39,9 @@ export default {
       checkoutToken: {},
       live: {},
       validator: new CreditCard(),
-      deliveryForm: {},
+      deliveryForm: {
+        country: ""
+      },
       paymentForm: dummyPayment,
       countries: {},
       states: {},
@@ -130,25 +133,25 @@ export default {
         line_items[item.id] = { quantity: item.quantity };
       });
       // console.log('lineitems',line_items);
-      const df = this.deliveryForm;
-      const pf = this.paymentForm;
+      const d = this.deliveryForm;
+      const p = this.paymentForm;
       const data = {
         line_items,
         customer: {
-          firstname: df.firstname,
-          lastname: df.lastname,
-          email: df.email
+          firstname: d.firstname,
+          lastname: d.lastname,
+          email: d.email
         },
         shipping: {
-          name: df.recipient,
-          street: df.street,
-          town_city: df.town_city,
-          county_state: df.state,
-          postal_zip_code: df.zip_code,
-          country: df.country
+          name: d.recipient,
+          street: d.street,
+          town_city: d.town_city,
+          county_state: d.state,
+          postal_zip_code: d.zip_code,
+          country: d.country
         },
         fulfillment: {
-          shipping_method: df.shipping_method
+          shipping_method: d.shipping_method
         },
         payment: {
           gateway: "test_gateway",
@@ -156,8 +159,8 @@ export default {
             number: number,
             expiry_month: month,
             expiry_year: year,
-            cvc: pf.cvc,
-            postal_zip_code: df.zip_code
+            cvc: p.cvc,
+            postal_zip_code: d.zip_code
           }
         }
       };
@@ -169,12 +172,15 @@ export default {
           this.$router.push(`/checkout/${res.id}/confirmation`);
           this.$emit("getNewCart");
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          console.log(err)
+          this.shippingMethods = []
+        });
     }
   },
   computed: {
     disableStates() {
-      return this.deliveryForm.country === "US" ? true : false;
+      return this.deliveryForm.country === "US" ? false : true;
     }
   },
   created() {
@@ -185,7 +191,6 @@ export default {
       .generateToken(getCartId, { type: "cart" })
       .then(res => {
         this.checkoutToken = res;
-        console.log(res);
         this.live = res.live;
       })
       .catch(err => console.log(err));
