@@ -1,869 +1,1044 @@
-# Adding products to cart with Commerce.js using Vue.js
+Handling Cart Checkout with Commerce.js using Vue.js
 
-This guide will walk you through on how to add products into a cart using Vue.js and Commerce.js. It will also cover how to remove products the cart, and how to change the product quantities inside the cart.
-
+This guide will go over the checkout process for an eCommerce site using Commerece.js and Vue.js. The checkout process gives the vendor information on where to deliver the product, and on how they will charge the customer. At the end of the process, an order confirmation is shown to verify the purchase and to summarize details about the order. This guide will instruct you through three main components of the checkout process: delivery form, payment form, and order confirmation.
 Commerce.js v2 will be used in this guide.
-
-[Live_Demo](https://codesandbox.io/s/vuejs-ecommerce-cart-handling-project-with-commercejs-wvi92)
-
-## Overview
-
-This guide continues on from [Create a Single-Page product catalogue with Vue.js](https://github.com/jaepass/example-cjs-vue) by jaepass. 
-
-If you haven’t done so already, create an account so you can access the Chec Dashboard and add products through your dashboard. In this guide, aftermarket car rims will be the products used for demonstration.
-
+Live_Demo_link
+Overview
+This is a continuation of Adding Products to Cart with Commerce.JS using Vue.js by Thomas Huynh.
+If you haven’t done so already, create an account so you can access the Chec Dashboard and add products through your dashboard. In this guide, backpacks will be the products used for demonstration.
 This guide will cover:
-- A quick setup that includes installations of required packages and code for product listing.
-- Creating a product viewing page and learning about Vue’s event handling.
-- Setting up vue-router to navigate between pages.
-- Utilizing Commerce.js cart add method and showing cart adding success message. 
-- Creating a header equipped with navigation.
-- Creating a cart viewing page with subtotal and cart editing.
+Cloning and installing the base project.
+Generating a checkout token to set up form fields
+Using the Commerce.js ‘live’ object to dynamically render the order summary
+Handling delivery and payment form logic
+Capturing a token and then populating the order confirmation
+Requirements
+IDE Code Editor
+NPM or yarn
+Vue JS
+Bootstrap
+Git
+Prerequisites
+Basic web development knowledge in HTML, CSS, and JS
+Some knowledge Single-page application design
+Initial Setup
+First, visit the base repo page at https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_Checkout_VueJS_BASE
+Fork your own repository.
 
+Clone or download the repo. This setup will go down the cloning path so copy the link shown in the popover.
 
-## Requirements
+Open a terminal of your choice, find a directory to store your project, and then enter in `git clone clone-url`.
+git clone git@github.com:thomas-t-huynh/CommerceJS_How_to_handle_Checkout_VueJS_BASE.git
 
-* IDE Code Editor
-* NPM or yarn
-* Vue JS
-* Bootstrap
-
-## Prerequisites
-
-* Basic web development knowledge in HTML, CSS, and JS
-* Some knowledge Single-page application design
-
-## Initial Setup
-
-1. First, pop open a terminal and install Vue globally.
-
-``` 
-npm install -g @vue/cli
-```
-
-2. Create a project using this Vue command.
-
-```
-Vue create your-project-name
-```
-
-3. You will see options on which features to include. Go ahead and select the defaults (babel, eslint). Bootstrap will be used for styling, which will be installed during the main guide.
-
-4. Change directory to your create project
-
-```
-Cd your-project-name
-```
-
-5. Run npm install to get all the necessary dependencies
-
-```
+CD into the directory.
+Cd CommerceJS_How_to_handle_Checkout_VueJS_BASE
+Run npm install to get all the required modules
 Npm install
-```
-
-6. Run the serve script found in package.json using NPM to boot up the local server
-
-```
+Run the serve script found in package.json to boot up the local server
 Npm run serve
-```
+Visit the localhost link shown in your terminal. 
 
-7. Install the Commerce.js SDK
+The app should look like this.
 
-```
-Npm install @chec/commerce.js
-```
-
-8. Open an IDE of your choice, and travel into your project’s directory. Travel into main.js and then copy and paste the code below.
-
-```javascript
-// App.vue
-import Vue from "vue";
-import Commerce from "@chec/commerce.js";
-import App from "./App.vue";
  
-Vue.config.productionTip = false;
+Access the cloned project directory with your IDE of choice, and get ready to code!
  
-const API_KEY = "your_api_key";
  
-const commerce = new Commerce(API_KEY, false);
- 
-new Vue({
-  render: h => h(App, { props: { commerce } })
-}).$mount("#app");
-```
+Project Tutorial
+1. Setting up the Checkout Page
 
-9. Open the App.vue file and replace all the code inside with this. 
-
-```html
-<!-- App.vue -->
-<template>
- <div class="container">
-   <ProductsPage :products="products"/>
- </div>
-</template>
-<script>
-import ProductsPage from "./pages/ProductsPage.vue";
-export default {
- name: "App",
- props: {
-   commerce: {
-     type: Object,
-     required: true
+Buying a product online requires a large amount of information so it could arrive accurately to your doorstep. The checkout process takes in  a large amount of information that requires specific formatting such as email or country. Thankfully, Commerce.js methods could help us set up some form data for such formattings.
+ 
+Starting off, visit the ‘CartPage.vue`. There should be a method called `pushToCheckoutPage` attached to the checkout button in the template. The method itself is this.
+ 
+CartPage.vue 
+pushToCheckoutPage() {
+     this.$router.push(`/checkout/${this.cart.id}`);
    }
- },
- components: {
-   ProductsPage
- },
- data() {
-   return {
-     products: [],
-     cart: []
-   };
- },
- created() {
-   this.commerce.products
-     .list()
-     .then(res => {
-       this.products = res.data;
-       this.commerce.cart
-         .retrieve()
-         .then(res => {
-           this.cart = res.line_items;
-         })
-         .catch(err => console.log(err));
-     })
-     .catch(err => console.log(err));
- }
-};
-</script>
-```
-
-10. An error will occur because the ProductsPage component doesn't exist yet. Create a pages folder and a component folder within the src directory. Starting with the ProductsPage, create a ProductsPage.vue Inside of pages folder and then copy and paste in the following code.
-
-```html
-<!-- ProductsPage.vue -->
-<template>
- <div>
-   <ProductCard
-     v-for="product in products"
-     :product="product"
-     :key="product.id"
-   />
- </div>
-</template>
  
-<script>
-import ProductCard from "../components/ProductCard.vue";
+When a user clicks this button, it will send them to the checkout page with the delivery form on it. Passing cart id as a parameter primarily serves to get the checkout token, but it will also persist the checkout process if the page happens to refresh or if the user wants to return to the checkout page.
  
-export default {
- name: "ProductsPage",
- components: {
-   ProductCard
- },
- props: {
-   products: {
-     type: Array
-   }
- }
-};
-</script>
-
-```
-11. Now create a ProductCard.vue file in the components folder, and copy and paste the code below.
-
-```html
-<!-- ProductCard.vue -->
+Before you start working on the checkout page, go into `App.vue` and pass down commerce as props into the router-view for the checkout page.
+ 
+App.vue
+      <router-view
+        ...
+        :commerce="commerce"
+      />
+ 
+The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of emitting, and modularize all checkout logic. 
+ 
+In the pages directory, create a file and name it `CheckoutPage.vue`. Copy and paste the code below to quickly get a basic layout.
+CheckoutPage.vue
 <template>
- <div class="card-body">
-   <img :src="product.media.source" class="card-img-top" :alt="product.name">
-   <h5 class="card-title">{{product.name}}</h5>
-   <h6 class="card-subtitle">{{product.price.formatted_with_symbol}}</h6>
- </div>
+  <div>
+    CheckoutPage
+  </div>
 </template>
  
 <script>
 export default {
- name: "ProductCard",
- props: {
-   product: {
-     type: Object
-   }
- }
-};
-</script>
- 
-<style scoped>
-div {
- width: 220px;
-}
-</style>
-```
-That was quite a bit to go through so here’s a break down to the key ideas. 
-
-* App file fetches the products list and then fetches the user’s cart. 
-* The results are stored in their respective states in the data method. 
-* Products state is passed as props into the ProductsPage, and the ProductPage maps out each product with the Product component. 
-* ProductCard component reveals the Product image, name, and price. Your product list will look similar to this.
-
-![Img1](public/img1.png)
-
-The project setup should be complete, and now onwards to the main guide.
-
-## Project Tutorial
-
-### 1. Create Product View Page
-
-Starting off is the creation of the product view page. The purpose of this page is to show the item in a larger and clearer view, have additional item details ,and allow customers to add the item into the cart.
-
-The idea is to have the customer click on the product’s name or image so they can move to the ProductViewPage with their selected product in sight. This requires a set up for event handling and routing. [Event handling](https://vuejs.org/v2/guide/events.html) will be the first subject.
-
-#### Handling events with directives and emit
-
-Now move back into the ProductCard.vue file. In order to pass the product object as props from the ProductCard.vue file, data needs to travel upwards in the DOM tree. This is accomplished by using [$emit](https://vuejs.org/v2/guide/components-custom-events.html), a built-in Vue method that communicates from child component to parent component and can also pass data up.
-
-Start by creating a [method](https://vuejs.org/v2/api/#methods) property inside of the export default located in the script tags. This property is where functions for use within the component can be stored. Inside of methods, create a function named onClick as this function will be called when the product is clicked. It should look like this below.
-
-```javascript
-// ProductCard.vue
- methods: {
-   onClick() {
-     this.$emit("viewProduct", this.product);
-   }
- }
-```
-
-Whenever $emit is called, you must call it as `this.$emit`. All of the states and functions within the script tag must start with this, a trend that you will not see inside of the template tags later on. Pass in a string that describes the name of this event as the first argument, and the following arguments can be any data inside of the component that you want to pass up.
-
-To make this function trigger, wrap the product’s image and name in the template with a span tag. In Vue.js, event handling is done through the use of [directives](https://012.vuejs.org/guide/directives.html). Instead of an onClick attribute, type in v-on:”event-type”=”method” instead. Below is how it should look, but with a shorthand for the v-on instead.
-
-```html
-<!-- ProductCard.vue -->
-<span @click="onClick">
-    <img :src="product.media.source" class="card-img-top" :alt="product.name">
-    <h5 class="card-title">{{product.name}}</h5>
-</span>
-```
-
-Verify this event is working by throwing in a console.log inside of the function. A shorthand of the v-on:”event-type” is @”event-type”, a convention that will be used for the remainder of the guide.
-
-Move into `ProductsPage.vue`, the parent component file that is one level above. Each following parent component will have identical processes that are meant to relay data from one another until it reaches its destination. To listen to a child component and then trigger a function, add the attribute @”emitName”=”method” in the Product tag.
-
-```html
-<!-- ProductsPage.vue -->
-<ProductCard
-    v-for="product in products"
-    :product="product"
-    :key="product.id"
-    @viewProduct="viewProduct"
-/>
-```
-
-The function in ProductsPage methods is very similar with a small change.
-
-```javascript
-// ProductsPage.vue
-methods: {
-    viewProduct(product) {
-        this.$emit("viewProduct", product);
+  name: "CheckoutPage",
+  props: {
+    commerce: {
+      type: Object
     }
-```
+  },
+  created() {}
+};
+</script>
+ 
+<style scoped></style>
+ 
+This is a new route that’s not hooked up to the VueRouter yet. Navigate into `main.js`, import in `CheckoutPage.vue`, and add the object containing the new route’s properties.
+main.js
+	{
+      path: "/checkout/:id",
+      name: "CheckoutPage",
+      component: CheckoutPage,
+    }
+ 
+Test the route by clicking the secure checkout button in `CartPage.vue`!
+ 
+Generating checkout token and using Commerce.js services
 
-There’s a parameter in the function to take in data passed up from the child component so it can continue traveling up.
+With the `CheckoutPage.vue` now in place, it’s time to make use of the cart id that was passed through. There will be asynchronous calls with the Commerce.js SDK.
+ In `CheckoutPage.vue`, make a `created()` method, and then add this line in it to access the params.
 
-The app.vue file is the desired parent. Create a function named “handleViewProduct” as a way to identify it as the function that will handle the purpose of the event.
+// CheckoutPage.vue
+const getCartId = this.$route.params.id;
 
-```javascript
-// App.vue
-handleViewProduct(product) {
-    this.productInView = product;
-}
-```
+It’s always a good idea to check objects that are returned so you can find useful properties. Here’s how `this.$route` appears in the console.
 
-this.productInView is a state that we have yet to make. Type it out inside of the data property.
 
-```javascript
-// App.vue
- data() {
-   return {
-     products: [],
-     cart: [],
-     productInView: {}
-   };
- },
-```
+ 
+The following code will be in `created()` because of their asynchronous nature. Using the commerce that was passed down earlier, call `checkout.generatetoken()` with the getCartId const and an object with key-pair value of type and cart respectively.
+ 
+CheckoutPage.vue
+    const getCartId = this.$route.params.id;
+    this.commerce.checkout
+      .generateToken(getCartId, { type: "cart" })
+      .then(res => {
+        this.checkoutToken = res;
+        this.live = res.live;
+      })
+      .catch(err => console.log(err));
+ 
+This method can be called with a permalink, which is why the type has to be specified. The response from the call is a checkout token that contains its ID used for capturing the token and to access built-in helper functions. Bind the token and the live property of the token to the component’s states.
+ 
 
-Inside of the ProductsPage tag, add the event listener attribute.
+ 
+The live object holds ‘real-time’ data on the checkout total. Helper functions that check for tax or for available shipping alters the total price of the checkout. The live object is returned when calling the helper functions.
 
-```html
-<!-- App.vue -->
-<ProductsPage :products="products" @viewProduct="handleViewProduct" />
-```
+Create default values in the component’s data method to house the states. In addition to that, make properties for countries and states that will come in use very soon.
+ 
+ CheckoutPage.vue
+   data() {
+    return {
+      checkoutToken: {},
+      live: undefined,
+      countries: {},
+      states: {},
+    };
+  },
+ 
+Now with the checkout token in hand, call two commerce methods `services.localeListCountries(this.checkoutToken.id)` and `services.localeListSubdivisions(“US”)` in the `created()` method.
+ 
+    this.commerce.services
+      .localeListCountries(this.checkoutToken.id)
+      .then(res => {
+        this.countries = { "": "Select a country", ...res.countries };
+      })
+      .catch(err => console.log(err));
+ 
+    this.commerce.services
+      .localeListSubdivisions("US")
+      .then(res => {
+        this.states = { "": "Select a state", ...res.subdivisions };
+      })
+      .catch(err => console.log(err));
+ 
+ 
+The responses should return objects of countries and subdivisions that can be shipped out to the current checkout. The concatenated objects shown above will serve only as display values for users to select a location.
+ 
+2. Creating the delivery form and handling changes
 
-Console logging can verify that this setup works. Great! Now onto routing.
-
-### 2. Routing
-
-This is the moment where the site finally becomes a single-page application. [Routing](https://router.vuejs.org/guide/#javascript) shows customers the appropriate page for each step in the cart adding process. First, install vue-router.
-
-```
-Npm install vue-router
-```
-
-And then import it along with all the pages to route. The `ProductViewPage.vue` wasn’t made yet so go ahead and create the file inside of the pages folder.
-
-```javascript
-// main.js
-import App from "./App.vue";
-import ProductViewPage from "./pages/ProductViewPage.vue";
-import ProductsPage from "./pages/ProductsPage.vue";
-```
-
-Inside of the main.js file, at the top just below the imports,tell Vue to use VueRouter like this.
-
-```javascript
-// main.js
-Vue.use(VueRouter);
-```
-Assign a const named router to a `VueRouter` instance and pass in an object with a property called routes. Routes will be an array filled with objects and each object is a route that the app will have.
-
-```javascript
-// main.js
-const router = new VueRouter({
- routes: [
-   {
-     path: "/",
-     name: "ProductsPage",
-     component: ProductsPage
-   },
-   {
-     path: "/product/:productId",
-     name: "ProductViewPage",
-     component: ProductViewPage,
+With the state loaded with regional data that the Chec API could understand, it’s time to make the delivery form. With VueJS, the delivery form will emit events on every keystroke, which could lead to a very dynamic form experience for users.
+ 
+Create `DeliveryForm.vue` in the components folder, and then copy and paste this in.
+ 
+DeliveryForm.vue
+<template>
+  <form name="deliveryForm" @submit="onSubmit">
+	Delivery form
+  </form>
+</template>
+ 
+<script>
+export default {
+  name: "DeliveryForm",
+  props: ["states", "countries"]
+};
+</script>
+ 
+<style scoped>
+</style>
+ 
+The name in the form will be useful later on to detect where the event is firing from. Notice that the `states` and `countries` props are ready to be passed in.
+ 
+Rather than rendering `DeliveryForm.vue` as a component, this guide will introduce nested routes ttps://router.vuejs.org/guide/essentials/nested-routes.html. 
+ 
+Access  the router in `Main.js`, import `DeliveryForm.vue`, and add an additional property named `children` that holds an array of route objects.
+ 
+main.js
+{
+     path: "/checkout/:id",
+     name: "CheckoutPage",
+     component: CheckoutPage,
+     children: [
+       {
+         path: "deliveryform",
+         component: DeliveryForm
+       }
+     ]
    }
- ]
-});
-```
-
-Some key points from this code.
-* The string in the path property will be concatenated with the site’s url so it can be accessed with the address bar.
-* The term behind the colon in the path can be extracted through Vue’s `$route.params`.
-* The name is how the router-link component directs users to the correct page.
-* Component property contains the actual component.
-
-```javascript
-// main.js
-new Vue({
-    router,
-    render: h => h(App, { props: { commerce } })
-}).$mount("#app");
-```
-
-To verify the routing is working, move into the `App.vue` file and replace the `ProductsPage` tag with a [router-view](https://router.vuejs.org/api/#router-view) tag, but make sure that :products=”products” is included too. You will also no longer need to import `ProductsPage` into the script. Remove the import and the `ProductsPage` variable in the components property.
-
-```html
-<!-- App.vue -->
-<div class="container">
-    <router-view :products="products"/>
-</div>
-```
-
-If the page renders the products list, then the router is working. Router-view can take in props just like any component. What’s different about router-view is that it takes in all props for all components linked up in routing. This is especially important for the `ProductViewPage` as you can now pass in the `productInView` as props.
-
-```html
-<!-- App.vue -->
+ 
+Nested routing allows for rendering of a route within a route itself. This will make the checkout page to be a lot like the `App.vue` page as it will host a router-view tag in its template too.
+ 
+The way to access the child routes is by appending the child’s path at the end of the parent route’s path.
+ 
+"/checkout/:id/deliveryform"
+ 
+This means you will have to change the link in `CartPage.vue`.
+ 
+ CartPage.vue
+    this.$router.push(`/checkout/${this.cart.id}/deliveryform`);
+ 
+Now travel back into the `CheckoutPage.vue` and add the router-view component into the template. Bind the `countries` and `states` data states as well.
+ 
+CheckoutPage.vue
+<template>
+  <div>
+    <router-view
+      :countries="countries"
+      :states="states"
+    />
+  </div>
+</template>
+ 
+The delivery form should now be rendering when you visit the page!
+ 
+The form will need input tags to allow users to enter in their info. Below is a large amount of templating html that is self-explanatory. Copy and paste it into the `DeliveryForm.vue`.
+ 
+DeliveryForm.vue
+<h3>Customer</h3>
+    <div class="form-group row">
+      <label for="checkout-email" class="col-sm-2 col-form-label"
+        >Email address</label
+      >
+      <input
+        type="email"
+        class="form-control col-sm-10"
+        id="checkout-email"
+        name="email"
+        @change="onChange"
+        required
+      />
+    </div>
+    <div class="form-group row">
+      <div class="col">
+        <label for="checkout-firstname">First name</label>
+        <input
+          type="text"
+          class="form-control"
+          name="firstname"
+          required
+          @change="onChange"
+        />
+      </div>
+      <div class="col">
+        <label for="checkout-lastname">Last name</label>
+        <input
+          type="text"
+          class="form-control"
+          name="lastname"
+          required
+          @change="onChange"
+        />
+      </div>
+    </div>
+ 
+    <h3>Delivery</h3>
+    <div class="form-group row">
+      <label for="checkout-recipient" class="col-sm-2 col-form-label"
+        >Recipient Name</label
+      >
+      <input
+        type="text"
+        class="form-control col-sm-10"
+        id="checkout-recipient"
+        name="recipient"
+        @change="onChange"
+        required
+      />
+    </div>
+    <div class="form-group row">
+      <label for="checkout-street" class="col-sm-2 col-form-label"
+        >Street Address</label
+      >
+      <input
+        type="text"
+        class="form-control col-sm-10"
+        id="checkout-street"
+        name="street"
+        @change="onChange"
+        required
+      />
+    </div>
+    <div class="form-group row">
+      <label for="checkout-optionalAddress" class="col-sm-2 col-form-label"
+        >Apt, Suite, etc. (Optional)</label
+      >
+      <input
+        type="text"
+        class="form-control col-sm-10"
+        id="checkout-optionalAddress"
+        name="optionalAddress"
+        @change="onChange"
+      />
+    </div>
+    <div class="form-group row">
+      <label for="checkout-town_city" class="col-sm-2 col-form-label">Town/City</label>
+      <input
+        type="text"
+        class="form-control col-sm-10"
+        id="checkout-town_city"
+        name="town_city"
+        @change="onChange"
+        required
+      />
+    </div>
+    <div class="form-group row">
+      <label for="checkout-zip_code" class="col-sm-2 col-form-label"
+        >Zip Code</label
+      >
+      <input
+        type="text"
+        class="form-control col-sm-10"
+        id="checkout-zip_code"
+        name="zip_code"
+        @change="onChange"
+        required
+      />
+    </div>
+    <div class="form-group row">
+      <label for="checkout-states" class="col-sm-2 col-form-label">State</label>
+      <select
+        class="form-control col-sm-10"
+        id="checkout-states"
+        name="state"
+        @change="onChange"
+        :disabled="disableStates"
+        required
+      >
+        <option
+          v-for="(state, i) in Object.keys(states)"
+          :value="state"
+          :key="i"
+        >
+          {{ states[state] }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group row">
+      <label for="checkout-country" class="col-sm-2 col-form-label"
+        >Country</label
+      >
+      <select
+        class="form-control col-sm-10"
+        id="checkout-country"
+        name="country"
+        @change="onChange"
+        required
+      >
+        <option
+          v-for="(country, i) in Object.keys(countries)"
+          :value="country"
+          :key="i"
+        >
+          {{ countries[country] }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group row">
+      <label for="checkout-number" class="col-sm-2 col-form-label"
+        >Phone Number</label
+      >
+      <input
+        type="text"
+        class="form-control col-sm-10"
+        id="checkout-number"
+        name="number"
+        @change="onChange"
+        required
+      />
+    </div>
+    <h5 v-if="shippingMethods.length > 0">Shipping Method</h5>
+    <div v-for="method in shippingMethods" :key="method.id" class="form-check">
+      <input
+        class="form-check-input"
+        type="radio"
+        name="shipping_method"
+        :value="method.id"
+        @change="onShippingChange"
+        required
+      />
+      <label class="form-check-label" for="exampleRadios1">{{
+        method.description
+      }}</label>
+    </div>
+    <button class="btn btn-primary">Continue to Payment</button>
+There’s a lot of information to take in here, but think of most of them as settings you can change. This guide will go over the important details.
+ 
+Type - Adjusts the input to based on the type of data that’s typed in. Password will hide the characters on the screen with asterisks. In this case, the “email” type will check if the email entered follows proper email format such as having an “@” symbol and a domain name following a “.”
+Required - an attribute that will prevent users from submitting data if the field is not filled out.
+Name - gives the field a name so it can be referenced in event objects. Useful to fill out the checkout page state later. 
+Select - this HTML tag has the same purpose as input because it collects data, but it has a limited range of given selections. This is good for collecting specific data that the software could understand. The option tag contains the selectable inputs.
+ 
+The states and countries input will be using the objects you called with the Commerce.js service methods. The state input ill be used as an example.
+ 
+DeliveryForm.vue
+      <select
+        class="form-control col-sm-10"
+        id="checkout-states"
+        name="state"
+        @change="onChange"
+        :disabled="disableStates"
+        required
+      >
+        <option
+          v-for="(state, i) in Object.keys(states)"
+          :value="state"
+          :key="i"
+        >
+          {{ states[state] }}
+        </option>
+      </select>
+ 
+ 
+The v-for directive iterates through each item in an array. Although States isn’t an array, the `Object.keys()` method takes all the keys of the object passed through and returns it as an array. This allows you to use the keys as values (state codes for Commerce.js SDK) and use the actual values (readable state values) for users to select.
+ 
+The disabled attribute contains a boolean value return from a computed function in the checkout page. It checks if the country is “US” and if it is, it will return true so the states of the US can be selected.
+ 
+CheckoutPage.vue
+  computed: {
+    disableStates() {
+      return this.deliveryForm.country === "US" ? false : true;
+    }
+  },
+ 
+That being said, pass down that computed value along with the other methods and event handlers listed below.
+ 
+ CheckoutPage.vue
 <router-view
-    @viewProduct="handleViewProduct"
-    :productInView="productInView"
-    :products="products"
-/>
-```
+      @onChange="handleOnChange"
+      @onShippingChange="setShippingMethod"
+      @onSubmit="handleOnSubmit"
+      :disableStates="disableStates"
+      :states="states"
+      :countries="countries"
+      :shippingMethods="shippingMethods"
+    />
+  </div>
+ 
+Also, because some of these onChange events will modify the state in the checkout page, make sure to add the states in data.
+ 
+CheckoutPage.vue
+  data() {
+    return {
+      checkoutToken: {},
+      live: {},
+      countries: {},
+      states: {},
+      shippingMethods: [],
+      deliveryForm: {
+        country: ""
+      },
+    };
+  },
+ 
+ 
+ 
+Each field has a `@change=”onChange”` event emitter so it can communicate with the parent component `CheckoutPage.vue`. It passes up an event object, which will be used to collect the input’s value. Below are the methods that will handle the onChange events.
+ 
+DeliveryForm.vue
+  methods: {
+    onChange(e) {
+      this.$emit("onChange", e);
+    },
+    onShippingChange(e) {
+      this.$emit("onShippingChange", e.target.value);
+    },
+    onSubmit(e) {
+      this.$emit("onSubmit", e);
+    }
+  },
+  props: ["disableStates", "states", "countries", "shippingMethods"]
+ 
+ 
+Handling change events
 
-Move into the `ProductCard.vue` file so you can add the [router-link](https://router.vuejs.org/api/#router-link) component. Wrap it around the span that contains the product’s image and name and then add the following attributes. 
+Now you’ll create methods that handle the change events being emitted. FIrst off will be the handler for input changes.
+ 
+   handleOnChange(e) {
+      const { form, name, value } = e.target;
+      this[form.name][name] = value;
+      form.name === "deliveryForm" && this.updateCheckoutSubtotal();
+    },
+ 
+ Whenever there’s a change in value in the fields that have `onChange` bound to it, it will find the delivery form state you created earlier via bracket notation. The e parameter passed through is the event object that can be accessed from the onChange attribute. Remember the form name in the `DeliveryPage.vue`?
+ 
+DeliveryForm.vue
+  <form name="deliveryForm" @submit="onSubmit">
+ 
+The object contains properties detailing most of the information about the form it came from. Console logging `e` will show you all the information if proper attributes are setted up.
+ 
 
-```html
-<!-- ProductCard.vue -->
-<router-link :to="{ name: 'ProductViewPage', params: { productId: product.id } }">
-    <span @click="onClick">
-    <img :src="product.media.source" class="card-img-top" :alt="product.name">
-    <h5 class="card-title">{{product.name}}</h5>
-    </span>
-</router-link>
-```
+ 
+Next method will be the one inside `handleOnChange()` at the last line, `updateCheckoutSubtotal()`.
+ 
+CheckoutPage.vue   
+updateCheckoutSubtotal() {
+      if (this.deliveryForm.country) {
+        const { country, zip_code, state } = this.deliveryForm;
+        if (
+          this.deliveryForm.country === "US" &&
+          this.deliveryForm.zip_code &&
+          this.deliveryForm.state
+        ) {
+          this.checkShippingAndTax(country, zip_code, state);
+        } else {
+          this.checkShippingAndTax(country);
+        }
+      }
+    },
+ 
+This method checks if certain fields of the form data contain values. It will activate another function that will use the Commerce.js helper function to grab tax and shipping prices based on the location fields. US locations require additional information to grab tax and shipping prices. This function is called during onChange so it can update the form and order summary in real time. Moving on to `checkShippingAndTax()`.
+ 
+ CheckoutPage.vue
+checkShippingAndTax(country, zip_code = "", state = "") {
+      this.commerce.checkout
+        .setTaxZone(this.checkoutToken.id, {
+          postal_zip_code: zip_code,
+          country: country,
+          region: state
+        })
+        .then(res => {
+          this.live = res.live;
+        })
+        .catch(err => console.log(err));
+ 
+      this.commerce.checkout
+        .getShippingOptions(this.checkoutToken.id, {
+          country: country,
+          region: state
+        })
+        .then(res => {
+          this.shippingMethods = res;
+        })
+        .catch(err => {
+          console.log(err)
+          this.shippingMethods = []
+        });
+    }
+  },
+ 
+This method uses Commerce.js methods to grab updated shipping and tax prices based on user inputted location. A live object will return from the tax setTaxZone call. Assign the live state to it so it can update the order summary later on. The getShippingOptions method will return an array of shipping methods. Assign this to the shippingMethods state so it can be used in the delivery form. The shipping method form will appear and look like this if the given location has shipping options available.
+ 
 
-The “to”  attribute is binded to the name of the route that you want to direct the customers to, and that name was also declared in the main.js file. Then there’s the params property, which is how values can be passed through [dynamically with routing](https://router.vuejs.org/guide/essentials/dynamic-matching.html). The productId key is found inside of the path for the ProductViewPage right after the colons.
-
-```javascript
-// main.js
-path: "/product/:productId",
-```
-
-Moving inside the empty ProductViewPage.vue file, copy and paste below.
-
-```html
-<!-- ProductViewpage.vue -->
+ 
+All the fields in the delivery form use the `onChange()` method, but only the shipment selection has its own method `onShippingChange()`. The next method `setShippingMethod()`  will respond to this event emitter.
+ 
+CheckoutPage.vue
+    setShippingMethod(shippingId) {
+      this.commerce.checkout
+        .checkShippingOption(this.checkoutToken.id, {
+          shipping_option_id: shippingId,
+          country: this.deliveryForm.country,
+          region: this.deliveryForm.state
+        })
+        .then(res => {
+          this.deliveryForm.shipping_method = shippingId;
+          this.live = res.live;
+        })
+        .catch(err => console.log(err));
+    }
+ 
+The method will take the shipment ID passed from the delivery form and then use that to make a Commerce.js method call `checkShippingOption()` to verify if the shipping option is valid. A live object is returned in the call and if the shipping is valid, it will update the live object. Assign shippingId to the `deliveryForm.shipping_method` property and the returned live to the live state.
+ 
+CheckoutPage.vue
+handleOnSubmit(e) {
+      e.preventDefault();
+this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
+ 
+ 
+The last method handles the onSubmit emit. It simply pushes to the payment form. The prevent default method for the event object stops the usual effect of page refreshing when forms are submitted. The reload is unnecessary, causes slowdowns in user experience, and erases state data that will be used later.
+ 
+The delivery form should now be complete!
+ 
+3. Using the live object with the Order Summary
+ 
+An order summary keeps track of the order’s pricing as the customer progresses through the checkout process. With how the delivery form is set up earlier, the retrieve values from the helper functions can dynamically update the order summary with the use of the live object.
+ 
+Very much like the checkout page and the delivery form, you’ll have to create the component. Create `OrderSummary.vue` in the components folder, and then copy and paste this code below to get a quick start.
+ 
+OrderSummary.vue
 <template>
- <div>
-   <div class="container">
-     <div>
-       <img :src="productInView.media.source" class="img-fluid">
-       <h6>Description:</h6>
-       <p v-html="productInView.description"/>
-     </div>
-     <div class="product-info">
-       <h3>{{ productInView.name }}</h3>
-       <h4>{{productInView.price.formatted_with_symbol}}</h4>
-       <button class="add-to-cart-button">Add to cart</button>
-     </div>
-   </div>
- </div>
+  <div class="card orderSummary-card">
+    <div class="card-body">
+      <h4 class="card-title">Order Summary</h4>
+      <hr>
+      <OrderSummaryItem v-for="item in live.line_items" :item="item" :key="item.id"/>
+      <hr>
+      <div class="d-flex justify-content-between">
+        <p>Subtotal</p>
+        <p>{{ live.subtotal.formatted_with_symbol }}</p>
+      </div>
+      <div class="d-flex justify-content-between">
+        <p>Shipping</p>
+        <p>{{ live.shipping.price.formatted_with_symbol }}</p>
+      </div>
+      <div class="d-flex justify-content-between">
+        <p>Tax</p>
+        <p>{{ live.tax.amount.formatted_with_symbol }}</p>
+      </div>
+      <hr>
+      <div class="d-flex justify-content-between">
+        <h5>Total with Tax</h5>
+        <h5>{{ live.total_with_tax.formatted_with_symbol }}</h5>
+      </div>
+    </div>
+  </div>
+</template>
+ 
+<script>
+import OrderSummaryItem from "./OrderSummaryItem";
+export default {
+  name: "OrderSummary",
+  props: ["live"],
+  components: {
+    OrderSummaryItem
+  }
+};
+</script>
+ 
+<style>
+.orderSummary-card {
+  margin: 20px 0;
+}
+</style>
+ 
+The order summary is a simple component that renders the props it receives from the checkout page. There is a component that needs to be made in this file called “OrderSummaryItem”.
+ 
+Create `OrderSummary.vue` in the components folder and copy and paste this code in.
+ 
+OrderSummary.vue
+<template>
+    <div class="d-flex justify-content-between">
+        <div>
+            <h6>{{ item.product_name }}</h6>
+            <p>Quantity: {{ item.quantity }}</p>
+        </div>
+        <p>{{ item.line_total.formatted_with_symbol }}</p>
+    </div>
 </template>
  
 <script>
 export default {
- name: "ProductViewPage",
- props: {
-   productInView: {
-     type: Object
-   }
- }
+    name: "OrderSummaryItem",
+    props: ["item"]
+}
+</script>
+ 
+<style>
+</style>
+ 
+This component will list out the items in the user’s cart. Users can double check the items they have during the checkout process, and see how the prices add up for themselves. 
+ 
+Return to `CheckoutPage.vue` and add the component in by importing it in and by passing it into the components method.
+ 
+CheckoutPage.vue
+import OrderSummary from "../components/OrderSummary";
+export default {
+  name: "CheckoutPage",
+  components: {
+    OrderSummary
+  },
+ 
+Add it into the template right above the delivery form.
+ 
+CheckoutPage.vue
+    <OrderSummary v-if=”live” :live="live"/>
+    <router-view
+	...
+    />
+ 
+The v-if directive checks if the live object exists. Remember how the default value for the live state was set as undefined? The order summary will only render if the live object is collected from the Commerce.js calls. The component can render regardless of this directive, but it will yield warnings and errors that clouds up the console because the initial render will receive undefined props.
+ 
+
+ 
+The order summary should turn out like this. The shipping and tax information updates as the live object gets updates from the delivery form methods.
+ 
+4. Creating the payment form with card validation
+ 
+The next form in this guide is the payment form, a way for users to securely pay for the products. The payment form takes in three values: the card number, the card expiration, and the CVC. The next steps will involve making a much smaller form than the delivery form, but more intricate because the web app should help users enter in valid card data.
+ 
+Before creating the page, hook up the path in the router at `main.js`. Although the file is not yet made, import it in as well.
+ 
+main.js
+import PaymentForm from "./components/PaymentForm.vue";
+...
+ {
+      path: "/checkout/:id",
+      name: "CheckoutPage",
+      component: CheckoutPage,
+      children: [
+        {
+          path: "deliveryform",
+          component: DeliveryForm
+        },
+        {
+          path: "paymentform",
+          component: PaymentForm
+        }
+      ]
+    }
+ 
+Create `PaymentForm.vue` in the components folder and then copy and paste this code below.
+ 
+PaymentForm.vue
+<template>
+  <form name="paymentForm" @submit="onSubmit" >
+    <h3>Payment Method</h3>
+    <div class="form-group">
+      <label for="checkout-number">Card Number</label>
+      <input
+        type="text"
+        class="form-control"
+        id="checkout-number"
+        name="number"
+        required
+        @change="onChange"
+      >
+    </div>
+  <div class="row">
+    <div class="col">
+      <label for="checkout-cardNumber">Expiration Date MM/YY</label>
+      <input type="text" class="form-control" name="expire" required @change="onChange" pattern="([0-9]{2}[/]?){2}">
+    </div>
+    <div class="col">
+      <label for="checkout-cardNumber">CVC ###</label>
+      <input type="text" class="form-control" name='cvc' required @change="onChange" pattern="([0-9]{3})">
+    </div>
+  </div>
+  <button class="btn btn-primary">Submit Order</button>
+</form>
+</template>
+ 
+<script>
+export default {
+  name: "PaymentForm",
+  methods: {
+    onChange(e) {
+      this.$emit("onChange", e);
+    },
+    onSubmit(e) {
+      this.$emit("onSubmit", e);
+    }
+  }
 };
 </script>
  
 <style scoped>
-img {
- width: 500px;
+form {
+  margin: 20px 0;
 }
-.container {
- display: flex;
-}
-.product-info {
- margin-top: 50px;
- margin-left: 50px;
-}
- 
-.product-info p {
- margin-top: 10px;
-}
-.add-to-cart-button {
- background: dodgerblue;
- border: none;
- color: white;
- padding: 10px 20px;
+button {
+  margin: 20px 0;
 }
 </style>
-```
+ 
+This is a very similar file compared to the delivery form. The main difference is that it collects different information. There is one new attribute that needs introduction, which is the pattern attribute found for the expiration data field and the CVC field. 
+ 
+PaymentForm.vue      
+<input type="text" class="form-control" name="expire" required @change="onChange" pattern="([0-9]{2}[/]?){2}">
+ 
+The pattern attribute can accept a regex string https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions so it can detect if the user’s input is in the proper format. Explaining regex will take you down a deep rabbit hole so it will not be explained thoroughly in this guide. The regex strings are included in the code above.
+ 
+Validating the card number
+ 
+Back inside of `CheckoutPage.vue`, you’ll install a credit card number validator library so your payment form can verify if the car number is valid. If you want to understand the algorithm used to determine valid card numbers, check out the Luhn’s algorithm. https://www.geeksforgeeks.org/luhn-algorithm/
+ 
+To install, open the temrinal.
+ 
+npm install creditcard.js
+Import the package in.
+ 
+CheckoutPage.vue
+import CreditCard from "creditcard.js";
+ 
+Then create a state so it can hold the validator object. The additional three states in the code below will also be explained in just a bit.
+ 
+CheckoutPage.vue
+  data() {
+	...
+      validator: new CreditCard(),
+paymentForm: {},
+status: "",
+receipt: {}
+	...
+    };
+  },
+ 
+ 
+Now for the `handleOnSubmit()` method. Replace the one that’s currently in the payment form with this one.
+ 
+PaymentForm.vue
+    handleOnSubmit(e) {
+      e.preventDefault();
+      if (e.target.name === "deliveryForm") {
+        this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
+      } else {
+        const isValidated = this.validator.isValid(this.paymentForm.number);
+        if (isValidated) {
+          this.status = "";
+          const spacedNumber = this.paymentForm.number.replace(/(\d{4}(?!\s))/g, "$1 ")
+          const splitExpire = this.paymentForm.expire.split("/");
+          this.handleCapture(spacedNumber, splitExpire[0], splitExpire[1]);
+        } else {
+          this.status = "The card number you entered is invalid.";
+        }
+      }
+    },
+ 
+This is the same one you had to copy earlier, but with some changes. The code checks which form is the submit event coming from. If it’s the payment form, it will run the validator you just installed. If the validator returns true, the card is good for transactional use. You will encounter some more regex once again. For the sake of brevity, the regex adds a space after every 4th number. While it’s good to learn regex if you plan to create complex pattern matching, there are plenty of premade regex patterns that can be found with a quick Google search.
+ 
+The const splitExpire separates the month and years on the expire state of the payment form. Split takes in a string argument that tells the method to separate strings into an array based on where the argument is in the string. Ie: “12/20” returns as [ “12”, “20” ].
+ 
+The point of changing these string values is because the Commerce.js SDK can only take them in this format during the token capture. At the end of this method, you’ll find the values passed into another method `handleCapture()`
+ 
+The conditional logic with the status states will send the user a message based on the validity of the credit card number. To have the status state physically appear on the user’s screen, add this element in the template under the order summary.
+ 
+CheckoutPage.vue
+    <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
+ 
+ 
+ CheckoutPage.vue
+ handleCapture(number, month, year) {
+      let line_items = {};
+      this.live.line_items.forEach(item => {
+        line_items[item.id] = { quantity: item.quantity };
+      });
+      // console.log('lineitems',line_items);
+      const d = this.deliveryForm;
+      const p = this.paymentForm;
+      const data = {
+        line_items,
+        customer: {
+          firstname: d.firstname,
+          lastname: d.lastname,
+          email: d.email
+        },
+        shipping: {
+          name: d.recipient,
+          street: d.street,
+          town_city: d.town_city,
+          county_state: d.state,
+          postal_zip_code: d.zip_code,
+          country: d.country
+        },
+        fulfillment: {
+          shipping_method: d.shipping_method
+        },
+        payment: {
+          gateway: "test_gateway",
+          card: {
+            number: number,
+            expiry_month: month,
+            expiry_year: year,
+            cvc: p.cvc,
+            postal_zip_code: d.zip_code
+          }
+        }
+      };
+      this.commerce.checkout
+        .capture(this.checkoutToken.id, data)
+        .then(res => {
+          console.log(res);
+          this.receipt = res;
+          this.$router.push(`/checkout/${res.id}/confirmation`);
+          this.$emit("getNewCart");
+        })
+        .catch(err => {
+          console.log(err)
+          this.shippingMethods = []
+        });
+    }
+ 
+This code will use the Commerce.js to capture the checkout, which will finalize the purchase and return data used to make the purchase.
+ 
+Item data must be passed in as an object so the first few lines of code returns the array of items into an object. Using a concept called Macros, you can shorten `this.paymentForm` and `this.deliveryForm` to single letters. In this case, you’ll be using d and p.
+ 
+The data object above shows all the required properties. The number, and expiration month and year were passed in from the argument. You’ll be using the ‘test_gateway’ for development purposes.
+ 
+One more detail to add is when making test checkouts, you will have to use this card number "4242424242424242”. This is a valid test number given by Commerece.js documentation. 
+ 
+The SDK makes a call to the server passing in the data you made, and then it will bind the response to the receipt state, which will be used for making the confirmation component. The `$router.push` sends users to the confirmation nested route, and then an emit to `App.vue` will signal a method to clear out the user’s cart.
+ 
+In `App.vue`, create the emit catcher.
+ 
+App.vue
+      <router-view
+	  ...
+        @getNewCart="handleGetNewCart"
+      />
+ 
+And the method to handle it.
+ 
+App.vue
+    handleGetNewCart() {
+      this.commerce.cart
+        .retrieve()
+        .then(res => {
+          this.cart = res;
+        })
+        .catch(err => console.log(err));
+    }
+ 
+ 
+If you had your debugger on, it will notify you in the console that a new cart is made. This method makes a call after the capture is successful so it can grab that newly made empty cart for the user so the previous cart will no longer show up.
+ 
+With that all set up, the last component is coming up in the last step.
+ 
+5. Making the order confirmation component
 
-And the end result.
+The receipt state that receives the object returned from a successful capture will contain information for the order confirmation component. This third nested component will contain all the information the customer entered such as the shipping address, the type of credit card used, and the order number.
+Create `Confirmation.vue` in the component folder, and then copy and paste this code in.
 
-![img2](/public/img2.png)
-
-### 3. Adding product to cart
-
-Ok, we are finally ready to add products to the cart. While the journey to get here was long, routing and event handling will serve as valuable skills that you will frequently utilize as you build your eCommerce site.
-
-With the given layout for the `ProductViewPage`, the next step is to have the blue “add to cart” button handle adding the product to the cart. The steps to this will look very similar to what you did early on. Attach an on-click event listener on the button.
-
-```html
-<!-- ProductView.vue -->
-<button @click="addProductToCart" class="add-to-cart-button">Add to cart</button>
-```
-
-Next is the function emitting this event. The function name is given above and will look very similar once again.
-
-```javascript
-// ProductView.vue
- methods: {
-   addProductToCart() {
-     this.$emit("addProductToCart", this.productInView);
-   }
- }
- ```
-
-Continue emitting until you get to the App.vue file. Fortunately, the file is the immediate parent component so in the App.vue file, create the event listener.
-
-```html
-<!-- App.vue -->
-   <router-view
-     :products="products"
-     @viewProduct="handleViewProduct"
-     :productInView="productInView"
-     @addProductToCart="handleAddProductToCart"
-   />
-```
-
-In the handler function named `handleAddProductToCart`, use commerce.js to do an API call much like the one earlier on, but instead of the retrieve method, use the add method and then pass in the product id.
-
-```javascript
-// App.vue
-   handleAddProductToCart(product) {
-     this.commerce.cart
-       .add(product)
-       .then(res => {
-         console.log(res)
-         this.cart = res.cart.line_items;
-       })
-       .catch(err => console.log(err));
-   },
-```
-
-Your handle function will look like this. Upon clicking, take a look into your console and check if you got an object showing if the item add was successful. This post request will return an updated cart in its response so assign it to the cart state.
-
-![img3](/public/img3.png)
-
-#### Showing cart adding success
-
-This is good news, but news that only the developer could see. There should be a way to let customers know if their item was successfully added to the cart. Having a status state would be one way to handle this. Inside of the App.vue file, add status inside of the data property.
-
-```js
-// App.vue
- data() {
-   return {
-     products: [],
-     cart: [],
-     productInView: {},
-     status: undefined
-   };
- },
-```
-
-Pass status down as a prop to ProductViewPage by passing it into router-view.
-
-```html
-<!-- App.vue -->
-   <router-view
-     :products="products"
-     @viewProduct="handleViewProduct"
-     :productInView="productInView"
-     :status="status"
-     @addProductToCart="handleAddProductToCart"
-   />
-```
-
-In `ProductViewPage.vue`, you can tell the component what type of props to expect inside of the props property. `ProductInView` props is already there, now add in a status props
-
-```javascript
-// ProductViewPage.vue
-   status: {
-     type: String
-   }
-```
-
-This is one way for the child component to receive props. There’s another way that is shorter and not type-sensitive. Set props as an array with the props names as strings instead of objects.
-
-```javascript
-// ProductViewPage.vue
-props: ["productInView", "status"]
-```
-
-Place the status inside of the template via text interpolation. Place it just below the “add to cart” button as customers' eyes should be fixed around that area already.
-
-```html
-<!-- ProductViewPage.vue -->
-<p>{{ status }}</p>
-```
-
-The status prop is linked from parent to child components, all there’s left for this to work is to set the status when cart adding is successful. Back in App.vue inside of `handleAddProductToCart` function, you can replace the console.log call with this.status = “success message”
-
-```javascript
-// ProductViewPage.vue
-this.status = "Item successfully added to cart";
-```
-
-Give it a try! After a second or two, a message should appear right below the button.
-
-![img4](/public/img4.png)
-
-If you view a different product, you’ll notice that the status message will linger around. A quick fix would be to set this.status = undefined inside of the handleProductView function in app.vue.
-
-```javascript
-// App.vue
-   handleViewProduct(product) {
-     this.productInView = product;
-     this.status = undefined;
-   },
-```
-
-### 4. Setting up a header for navigation
-
-The `ProductViewPage` is accessible, but customers can’t get out of it unless they delete the “/product/:productId” inside of the address bar. This is clearly not user-friendly so you’ll have to make a header with navigation features 
-
-Create Header.vue inside of the components folder. There isn’t too much to learn about this step so go ahead and copy and paste this inside.
-
-```html
-<!-- Header.vue -->
+Confirmation.vue
 <template>
-   <nav>
-       <router-link to="/">Home</router-link>
-       <router-link to="/cart">Cart</router-link>
-   </nav>
+  <div class="card">
+    <div class="card-body">
+      <h3 class="card-title">Thank you for your order!</h3>
+      <hr>
+      <div class="confirmation-order_info">
+        <div class="d-flex justify-content-between">
+          <h6>Order Number</h6>
+          <p>{{ receipt.id }}</p>
+        </div>
+        <div class="d-flex justify-content-between">
+          <h6>Order Date</h6>
+          <p>{{ moment().millisecond(1585936128).format("ddd MMM d YYYY") }}</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <h5>Shipping Address</h5>
+          <p>{{ receipt.shipping.name }}</p>
+          <p>{{ receipt.shipping.street }}</p>
+          <p>{{ receipt.shipping.town_city }}, {{ receipt.shipping.county_state}}, {{ receipt.shipping.postal_zip_code }} {{ receipt.shipping.country }}</p>
+          <p>{{ receipt.customer.email }}</p>
+        </div>
+        <div class="col">
+          <h5>Payment Method</h5>
+          <p>{{ receipt.payments[0].card_type }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
  
 <script>
+import moment from "moment";
 export default {
- name: "Header"
+  name: "Confirmation",
+  props: {
+    receipt: {
+      type: Object
+    }
+  },
+  data() {
+    return {
+      moment: moment
+    };
+  }
 };
 </script>
  
 <style scoped>
-nav a {
-   margin-right: 10px;
+.card {
+  margin: 20px 0;
+}
+ 
+.confirmation-order_info {
+  width: 400px;
+}
+ 
+.row .col p {
+  margin: 0;
 }
 </style>
-```
 
-Make sure you import the component into the App.vue file and then add it into the component property.
-
-```javascript
-// App.vue
-import Header from "./components/Header";
-
- components: {
-   Header
- },
-```
-
-There’s a link to the cart page you haven’t made yet. The next section will go into that.
-
-Give it a try and see if you can flip back between the ProductsPage and the ProductViewPage.
-
-### 5. Create a page to view cart
-
-So far the app can add items to the cart and verify its success. Now you’ll create one last page that will provide customers a page to change the item’s quantity or to remove an item from the cart. 
-
-Create a file in the pages folder named `CartPage.vue`. Inside of the file, copy and paste this in.
-
-```html
-<!-- CartPage.vue -->
-<template>
- <div>
-   <CartItem
-     v-for="product in cart"
-     :product="product"
-     :key="product.id"
-     @updateItemQuantity="updateItemQuantity"
-     @removeItem="removeItem"
-   />
- </div>
-</template>
+This is another straightforward component that receives props. It does introduce one new tool that can aid you in all date-related coding. The created property from the returned object is in milliseconds since the unix time https://en.wikipedia.org/wiki/Unix_time. Using the moment library, one can quickly transform those milliseconds into a readable date.
  
-<script>
-import CartItem from "../components/CartItem.vue";
+Open the terminal and install moment.js https://momentjs.com/
  
-export default {
- name: "CartPage",
- components: {
-   CartItem
- },
- props: {
-   cart: {
-     type: Array
-   }
- },
- methods: {
-   updateItemQuantity(id, quantity) {
-     this.$emit("updateItemQuantity", id, quantity);
-   },
-   removeItem(id) {
-     this.$emit("removeItem", id);
-   }
- }
-};
-</script>
-```
-
-As seen above, there’s a component named CartItem that you have yet to make. Create a `CartItem.vue` file inside of components and then copy and paste this in.
-
-```html
-<!-- CartItem.vue -->
-<template>
- <div class="card-body">
-   <div>
-       <img :src="product.media.source" class="card-img-top" :alt="product.name">
-       <h5 class="card-title">{{product.name}}</h5>
-       <h6 class="card-subtitle">Price: ${{product.price.formatted_with_symbol}}</h6>
-   </div>
-   <div>
-       <h5>Quantity: {{ product.quantity }}</h5>
-       <h6>Update item quantity</h6>
-       <input @input="onChange" type="number" step="1" min="1">
-       <button @click="updateItemQuantity">Update</button>
-       <button @click="removeItem" class="remove-button">Remove Item</button>
-   </div>
- </div>
-</template>
+npm install moment
+The module is already imported and added into the data state for use. Using the milliseconds method, it can take in integers in values of milliseconds and then return a date object. The format method then takes a string pattern (like an easier version of regex) and then returns a date value following that format.
  
-<script>
-export default {
- name: "CartItem",
- props: {
-   product: {
-     type: Object
-   }
- },
- data() {
-     return {
-         quantity: 1
-     }
- },
- methods: {
-     onChange(e) {
-         this.quantity = e.target.value
-     },
-     updateItemQuantity() {
-         this.$emit("updateItemQuantity", this.product.id, this.quantity )
-     },
-     removeItem() {
-         this.$emit("removeItem", this.product.id)
-     }
- }
-};
-</script>
+Next is to add this subroute into `main.js`. Import and create the route object as usual.
  
-<style scoped>
-div {
- width: 220px;
- margin-right: 50px;
-}
+Main.js
+import Confirmation from "./components/Confirmation.vue";
+…
+    {
+      path: "/checkout/:id",
+      name: "CheckoutPage",
+      component: CheckoutPage,
+      children: [
+        {
+          path: "deliveryform",
+          component: DeliveryForm
+        },
+        {
+          path: "paymentform",
+          component: PaymentForm
+        },
+        {
+          path: "confirmation",
+          component: Confirmation
+        }
+      ]
+    }
  
-div input {
-   width: 50px;
-}
-.card-body {
-   display: flex;
-   width: 100%;
-   align-items: center;
-}
-.remove-button {
-   border: none;
-   background: none;
-   color: dodgerblue;
-   margin-top: 50px;
-}
-</style>
-```
+Now pass down the receipt state in `CheckoutPage.vue` as props into router-view so this component can make use of it.
+ 
+CheckoutPage.vue
+    <router-view
+	...
+      :receipt="receipt"
+    />
+ 
+Fill out the forms, make sure you use the dummy card number “4242424242424242”, an email you have (to check if you receive an automated order confirmation email), and see if it all works. The component will appear after a few seconds, and will look like this.
+ 
 
-Most of the event-listeners and functions are included. The step-by-step instructions will be skipped because there’s not too much new knowledge to absorb. Instead, here are the key points:
+And that’s the complete checkout process.
+ 
+Conclusion	
+The checkout process is a long process to develop because there are so many different ways to go about it. There are many features that could be incorporated into the checkout process, especially with the flexibility that Commerce.js SDK allows for this. Thanks for reading this guide, and I hope you will find more cool things to make the checkout as user friendly as possible.
+ 
+Built With
+NPM Vue.js Bootstrap Codesandbox
+Author
+Thomas Huynh - Github
 
-* `CartPage` iterates through the cart items and creates a CartItem component for each product with the product’s props pass down.
-* `CartItem` component has two event listeners: input and click. Customers select the quantity they want on the input, and can submit with the “Update” button
-* Input event changes quantity state accordingly and click events emits data upwards to App.vue file for the commerce instance to use.
-
-The pages and components are ready, but are not hooked up yet to the router. Move to `main.js` and add the route just like the other pages.
-
-```javascript
-// main.js
-   {
-     path: "/cart",
-     name: "CartPage",
-     component: CartPage
-   }
-```
-
-Pass in the cart state in App.vue into the router-view.
-
-```html
-<!-- App.vue -->
-   <router-view
-     :products="products"
-     @viewProduct="handleViewProduct"
-     :productInView="productInView"
-     :status="status"
-     @addProductToCart="handleAddProductToCart"
-     :cart="cart"
-   />
-```
-
-#### Show cart's subtotal
-
-There’s one additional step that’s going to be more hands-on. Customers would like to see their subtotal (total price before tax, shipping, discounts, etc) price when they check their cart. Being able to see price change when quantity changes improves user’s experience.
-
-Create a [computed](https://v1.vuejs.org/guide/computed.html) property inside of CartPage.vue export default object. Because text interpolation can only handle simple operations, computed provides space for more complex operations.
-
-To get the subtotal, use the [reduce](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) array method on the cart array. 
-
-
-```javascript
-// CartPage.vue
-   cartTotal() {
-     return this.cart.reduce(
-       (acc, currentEl) => acc + currentEl.quantity * currentEl.price.raw, 0);
-   }
-```
-
-Reduce takes in a callback function with two parameters: Accumulator (acc) and currentElement (currentEl). Each element it iterates through is added to acc. Acc is carried over for each iteration. Each element is a product from the cart so you can access its price and quantity.
-
-Add the computed value into your template.
-
-```html
-<!-- CartPage.vue -->
-   <div>
-     <hr>
-     <h3 class="subtotal">Cart Subtotal: $ {{ cartTotal }}</h3>
-   </div>
-```
-
-If you added items into your cart, your result will look like this.
-
-![img5](/public/img5.png)
-
-#### Updating the Cart
-
-The copied code should already have emits included, all there’s left is to have the App.vue file to listen to them.
-
-Inside of the App.vue, add event listeners into the router-view component and then link them to handler functions.
-
-```html
-<!-- App.vue -->
-   <router-view
-     :products="products"
-     @viewProduct="handleViewProduct"
-     :productInView="productInView"
-     :status="status"
-     @addProductToCart="handleAddProductToCart"
-     :cart="cart"
-     @updateItemQuantity="handleUpdateItemQuantity"
-     @removeItem="handleRemoveItem"
-   />
-```
-
-Now go ahead and create these functions.
-
-```javascript
-// App.vue
-   handleUpdateItemQuantity(id, quantity) {
-     this.commerce.cart
-       .update(id, { quantity })
-       .then(res => {
-         this.cart = res.cart.line_items;
-       })
-       .catch(err => console.log(err));
-   },
-   handleRemoveItem(id) {
-     this.commerce.cart
-       .remove(id)
-       .then(res => {
-         this.cart = res.cart.line_items;
-       })
-       .catch(err => console.log(err));
-   },
-```
-
-Both of these functions are very similar to adding product to cart. Update method takes in the product’s id string and an object with the quantity amount. Remove method only needs the product id. Both requests will return an updated cart upon successful calls, which you will bind to the cart state to update the customer’s cart.
-
-Try changing the quantity input and see if it works.
-
-![img6](/public/img6.png)
-
-## And that's it!
-
-Going from listing products to adding the products to cart is a huge step due to the higher level of interactivity. Fortunately, the lessons learned in this guide will provide a solid foundation for the implementation of Comemrce.js checkout process, which is the next step in building a complete eCommerce site.
-
-## Built With
-
-NPM
-Vue.js
-Bootstrap 
-Codepen
-
-## Author
-Thomas Huynh - [Github](https://github.com/thomas-t-huynh)
