@@ -829,17 +829,19 @@ The point of changing these string values is because the Commerce.js SDK can onl
  
 The conditional logic with the status states will send the user a message based on the validity of the credit card number. To have the status state physically appear on the user’s screen, add this element in the template under the order summary.
  
-CheckoutPage.vue
+
+```html
+<!-- CheckoutPage.vue -->
     <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
- 
- 
- CheckoutPage.vue
+```
+
+```js
+// CheckoutPage.vue
  handleCapture(number, month, year) {
       let line_items = {};
       this.live.line_items.forEach(item => {
         line_items[item.id] = { quantity: item.quantity };
       });
-      // console.log('lineitems',line_items);
       const d = this.deliveryForm;
       const p = this.paymentForm;
       const data = {
@@ -874,58 +876,60 @@ CheckoutPage.vue
       this.commerce.checkout
         .capture(this.checkoutToken.id, data)
         .then(res => {
-          console.log(res);
           this.receipt = res;
           this.$router.push(`/checkout/${res.id}/confirmation`);
           this.$emit("getNewCart");
         })
         .catch(err => {
           console.log(err)
-          this.shippingMethods = []
         });
     }
- 
-This code will use the Commerce.js to capture the checkout, which will finalize the purchase and return data used to make the purchase.
- 
-Item data must be passed in as an object so the first few lines of code returns the array of items into an object. Using a concept called Macros, you can shorten `this.paymentForm` and `this.deliveryForm` to single letters. In this case, you’ll be using d and p.
- 
-The data object above shows all the required properties. The number, and expiration month and year were passed in from the argument. You’ll be using the ‘test_gateway’ for development purposes.
- 
-One more detail to add is when making test checkouts, you will have to use this card number "4242424242424242”. This is a valid test number given by Commerece.js documentation. 
- 
-The SDK makes a call to the server passing in the data you made, and then it will bind the response to the receipt state, which will be used for making the confirmation component. The `$router.push` sends users to the confirmation nested route, and then an emit to `App.vue` will signal a method to clear out the user’s cart.
- 
-In `App.vue`, create the emit catcher.
- 
-App.vue
-      <router-view
-	  ...
-        @getNewCart="handleGetNewCart"
-      />
- 
-And the method to handle it.
- 
-App.vue
-    handleGetNewCart() {
-      this.commerce.cart
-        .retrieve()
-        .then(res => {
-          this.cart = res;
-        })
-        .catch(err => console.log(err));
-    }
- 
- 
-If you had your debugger on, it will notify you in the console that a new cart is made. This method makes a call after the capture is successful so it can grab that newly made empty cart for the user so the previous cart will no longer show up.
- 
-With that all set up, the last component is coming up in the last step.
- 
-5. Making the order confirmation component
+```
 
-The receipt state that receives the object returned from a successful capture will contain information for the order confirmation component. This third nested component will contain all the information the customer entered such as the shipping address, the type of credit card used, and the order number.
+This code will use the Commerce.js to capture the checkout, which will finalize the purchase and then return order data.
+ 
+Line_items data must be passed in as an object. The first few lines of code handles this conversion. Using a concept called Macros, you can shorten `this.paymentForm` and `this.deliveryForm` to a single letter for ease of variable referrence. In this case, you’ll be using d and p.
+ 
+The data object above shows all the required properties. The number, month, and year were passed in from the previous method. You’ll be using the ‘test_gateway’ for testing purposes.
+ 
+One more detail to add is when making test checkouts, you will have to use this card number "4242424242424242”. This is a valid dummy number given by the Commerce.js documentation that can simulate a valid capture.
+ 
+The SDK makes a call to the server with the data object, and if successful, will return an object assigned to the receipt, which will be used for making the confirmation component. The `$router.push` sends users to the confirmation nested route, and then an emit to `App.vue` will signal a method to clear out the user’s cart.
+ 
+In `App.vue`, create the emit handler.
+ 
+```html
+<!-- App.vue -->
+<router-view
+	  ...
+	@getNewCart="handleGetNewCart"
+/>
+```
+
+And the method to handle it.
+
+```js
+App.vue
+handleGetNewCart() {
+	this.commerce.cart
+	.retrieve()
+	.then(res => {
+		this.cart = res;
+	})
+	.catch(err => console.log(err));
+}
+```
+ 
+If you had your debugger on, it will notify you in the console that a new cart is made. This method makes a call after the capture is successful so it can grab that newly-made empty cart for the user. This clears the previous cart the user had.
+ 
+### 5. Making the order confirmation component
+
+The receipt state that receives the object returned from a successful capture contains information for the order confirmation component. This third nested component will contain all the information about the order such as the shipping address, the type of credit card used, and the order ID just to name a few.
+
 Create `Confirmation.vue` in the component folder, and then copy and paste this code in.
 
-Confirmation.vue
+```html
+<!-- Confirmation.vue -->
 <template>
   <div class="card">
     <div class="card-body">
@@ -988,15 +992,19 @@ export default {
   margin: 0;
 }
 </style>
+```
 
-This is another straightforward component that receives props. It does introduce one new tool that can aid you in all date-related coding. The created property from the returned object is in milliseconds since the unix time https://en.wikipedia.org/wiki/Unix_time. Using the moment library, one can quickly transform those milliseconds into a readable date.
+This is another straightforward component that receives props. It does introduce one new tool that can aid you in all date-related development. The created property from the returned object is in milliseconds since the [unix time](https://en.wikipedia.org/wiki/Unix_time). Using the moment library, you can quickly transform those milliseconds into a readable date.
  
-Open the terminal and install moment.js https://momentjs.com/
- 
+Open the terminal and install [moment.js](https://momentjs.com/)
+
+ ```
 npm install moment
-The module is already imported and added into the data state for use. Using the milliseconds method, it can take in integers in values of milliseconds and then return a date object. The format method then takes a string pattern (like an easier version of regex) and then returns a date value following that format.
+```
+
+If you coppied the code above, the module is already imported and then added into the data state. Using the milliseconds method, it can take in integers in values of milliseconds and then return a date object. The format method then takes a string pattern (like a more simple regex), and then returns a date value using that format.
  
-Next is to add this subroute into `main.js`. Import and create the route object as usual.
+Next, add this subroute into `main.js`. Import and create the route object as usual.
 
 ```js
 // Main.js
@@ -1043,8 +1051,12 @@ And that wraps up the whole checkout process!
 
 The checkout process takes long to develop because there are so many different ways to go about it. There are many functions that could be incorporated into the checkout process, especially with a flexible SDK such as Commerece.js. Thanks for reading this guide, and I hope you will find more cool features to implement to make the checkout process more user friendly.
  
-Built With
-NPM Vue.js Bootstrap Codesandbox
+## Built With
+
+NPM
+Vue.js
+Bootstrap
+Codesandbox
 
 ## Author
 Thomas Huynh - [Github](https://github.com/thomas-t-huynh)
