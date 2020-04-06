@@ -488,26 +488,34 @@ DeliveryForm.vue
  
 Handling change events
 
-Now you’ll create methods that handle the change events being emitted. FIrst off will be the handler for input changes.
- 
+Now you’ll create methods that will handle the change events being emitted. First off will be the handler for input changes.
+
+```js
+//  CheckoutPage.vue
    handleOnChange(e) {
       const { form, name, value } = e.target;
       this[form.name][name] = value;
       form.name === "deliveryForm" && this.updateCheckoutSubtotal();
     },
- 
- Whenever there’s a change in value in the fields that have `onChange` bound to it, it will find the delivery form state you created earlier via bracket notation. The e parameter passed through is the event object that can be accessed from the onChange attribute. Remember the form name in the `DeliveryPage.vue`?
- 
-DeliveryForm.vue
-  <form name="deliveryForm" @submit="onSubmit">
- 
-The object contains properties detailing most of the information about the form it came from. Console logging `e` will show you all the information if proper attributes are setted up.
- 
+```
 
+Whenever there’s a change in the input field with `onChange` bound to it, it will find the property in the delivery form state you created earlier via bracket notation. The e parameter passed through is the event object that can be accessed from the onChange attribute. It contains the name of both the form and the input it came from.
+
+In case you have forgotten, the form in `DeliveryForm.vue` has a name attribute on it.
+
+```html
+<!-- DeliveryForm.vue -->
+<form name="deliveryForm" @submit="onSubmit">
+```
+
+If you're curious about what else `e` has to offer , console log it to see.
  
+![checkout](/src/assets/checkout.png)
+
 Next method will be the one inside `handleOnChange()` at the last line, `updateCheckoutSubtotal()`.
- 
-CheckoutPage.vue   
+
+```js
+// CheckoutPage.vue   
 updateCheckoutSubtotal() {
       if (this.deliveryForm.country) {
         const { country, zip_code, state } = this.deliveryForm;
@@ -522,10 +530,14 @@ updateCheckoutSubtotal() {
         }
       }
     },
- 
-This method checks if certain fields of the form data contain values. It will activate another function that will use the Commerce.js helper function to grab tax and shipping prices based on the location fields. US locations require additional information to grab tax and shipping prices. This function is called during onChange so it can update the form and order summary in real time. Moving on to `checkShippingAndTax()`.
- 
- CheckoutPage.vue
+```
+
+This method checks if certain fields of the form data is filled. If it is filled, It will activate another function that will use the Commerce.js helper functions to grab tax and shipping prices based on the location fields. US locations require additional information to grab tax and shipping prices. This function is called during onChange so it can update the form and order summary in real time. 
+
+Moving on to the next method that gets called inside of the previous one, `checkShippingAndTax()`.
+
+ ```js
+// CheckoutPage.vue
 checkShippingAndTax(country, zip_code = "", state = "") {
       this.commerce.checkout
         .setTaxZone(this.checkoutToken.id, {
@@ -547,19 +559,20 @@ checkShippingAndTax(country, zip_code = "", state = "") {
           this.shippingMethods = res;
         })
         .catch(err => {
-          console.log(err)
           this.shippingMethods = []
         });
     }
   },
- 
-This method uses Commerce.js methods to grab updated shipping and tax prices based on user inputted location. A live object will return from the tax setTaxZone call. Assign the live state to it so it can update the order summary later on. The getShippingOptions method will return an array of shipping methods. Assign this to the shippingMethods state so it can be used in the delivery form. The shipping method form will appear and look like this if the given location has shipping options available.
- 
+```
 
+This method uses Commerce.js methods to grab updated shipping and tax prices based on user inputted location. A live object will return from the `setTaxZone()` call. Assign the live state to the live object so it can update the order summary later on. The `getShippingOptions()` method will return an array of available shipping methods. Assign this to the shippingMethods state so it can be used in the delivery form. The shipping method form will appear and look like this if shipping options available.
+ 
+![checkout](/src/assets/checkout.png)
  
 All the fields in the delivery form use the `onChange()` method, but only the shipment selection has its own method `onShippingChange()`. The next method `setShippingMethod()`  will respond to this event emitter.
- 
-CheckoutPage.vue
+
+```js
+// CheckoutPage.vue
     setShippingMethod(shippingId) {
       this.commerce.checkout
         .checkShippingOption(this.checkoutToken.id, {
@@ -568,31 +581,34 @@ CheckoutPage.vue
           region: this.deliveryForm.state
         })
         .then(res => {
-          this.deliveryForm.shipping_method = shippingId;
-          this.live = res.live;
+            this.deliveryForm.shipping_method = res.id;
+            this.live = res.live;
         })
         .catch(err => console.log(err));
     }
- 
-The method will take the shipment ID passed from the delivery form and then use that to make a Commerce.js method call `checkShippingOption()` to verify if the shipping option is valid. A live object is returned in the call and if the shipping is valid, it will update the live object. Assign shippingId to the `deliveryForm.shipping_method` property and the returned live to the live state.
- 
-CheckoutPage.vue
+```
+
+The method will take the shipment ID passed from the delivery form and then use that to make a Commerce.js method call `checkShippingOption()` to verify if the shipping option is valid. A live object is returned in the call and if the shipping is valid, it will update the live object. Assign shippingId to the `deliveryForm.shipping_method` property and the returned live object response to the live state.
+
+```js
+// CheckoutPage.vue
 handleOnSubmit(e) {
-      e.preventDefault();
-this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
- 
- 
-The last method handles the onSubmit emit. It simply pushes to the payment form. The prevent default method for the event object stops the usual effect of page refreshing when forms are submitted. The reload is unnecessary, causes slowdowns in user experience, and erases state data that will be used later.
+	e.preventDefault();
+	this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
+```
+
+The last method handles the onSubmit emit. It pushes the user to the payment form route. The prevent default method for the event object stops the usual effect of page refreshing when forms are submitted. The reload is unnecessary, causes slowdowns in user experience, and erases state data that will be used later.
  
 The delivery form should now be complete!
  
-3. Using the live object with the Order Summary
+### 3. Using the live object with the Order Summary
  
-An order summary keeps track of the order’s pricing as the customer progresses through the checkout process. With how the delivery form is set up earlier, the retrieve values from the helper functions can dynamically update the order summary with the use of the live object.
+An order summary keeps track of the order’s pricing as the customer progresses through the checkout process. Based on how the delivery form is set up earlier, the returned values from the Commerce.js helper functions can dynamically update the order summary with the use of the live object.
  
-Very much like the checkout page and the delivery form, you’ll have to create the component. Create `OrderSummary.vue` in the components folder, and then copy and paste this code below to get a quick start.
- 
-OrderSummary.vue
+Create `OrderSummary.vue` in the components folder, and then copy and paste this code below to get a quick start.
+
+```html
+<!-- OrderSummary.vue -->
 <template>
   <div class="card orderSummary-card">
     <div class="card-body">
@@ -637,12 +653,14 @@ export default {
   margin: 20px 0;
 }
 </style>
+```
  
-The order summary is a simple component that renders the props it receives from the checkout page. There is a component that needs to be made in this file called “OrderSummaryItem”.
+The order summary is a simple component that renders the props it receives from the checkout page. There is another component that needs to be made for this file called `OrderSummaryItem.vue`.
  
-Create `OrderSummary.vue` in the components folder and copy and paste this code in.
- 
-OrderSummary.vue
+Create `OrderSummary.vue` in the components folder, and copy and paste this code in.
+
+```html 
+<!-- OrderSummary.vue -->
 <template>
     <div class="d-flex justify-content-between">
         <div>
@@ -662,61 +680,68 @@ export default {
  
 <style>
 </style>
+```
  
-This component will list out the items in the user’s cart. Users can double check the items they have during the checkout process, and see how the prices add up for themselves. 
+This component will list out the items in the user’s cart. Users can double check the items they have in the cart during the checkout, and see if the prices change accurately. 
  
-Return to `CheckoutPage.vue` and add the component in by importing it in and by passing it into the components method.
- 
-CheckoutPage.vue
+Return to `CheckoutPage.vue`, import the component, and list it in the components method.
+
+```js
+// CheckoutPage.vue
 import OrderSummary from "../components/OrderSummary";
 export default {
-  name: "CheckoutPage",
-  components: {
-    OrderSummary
-  },
- 
-Add it into the template right above the delivery form.
- 
-CheckoutPage.vue
-    <OrderSummary v-if=”live” :live="live"/>
-    <router-view
-	...
-    />
- 
-The v-if directive checks if the live object exists. Remember how the default value for the live state was set as undefined? The order summary will only render if the live object is collected from the Commerce.js calls. The component can render regardless of this directive, but it will yield warnings and errors that clouds up the console because the initial render will receive undefined props.
- 
+	name: "CheckoutPage",
+	components: {
+		OrderSummary
+},
+```
 
+Add it into the template right above the delivery form component.
+
+```html
+<!-- CheckoutPage.vue -->
+<OrderSummary v-if=”live” :live="live"/>
+<router-view
+	...
+/>
+```
+The v-if directive checks if the live object exists. Remember how the default value for the live state was set as `undefined` The order summary will only render if the live object is collected from the Commerce.js calls. The component can render regardless of this directive, but it will yield warnings and errors that clouds up the console because the component will attempt to read properties from undefined props initially.
  
-The order summary should turn out like this. The shipping and tax information updates as the live object gets updates from the delivery form methods.
+ ![checkout](/src/assets/checkout.png)
  
-4. Creating the payment form with card validation
+The order summary should turn out like this image above. The shipping and tax information updates as the live object gets updates from the delivery form methods.
  
-The next form in this guide is the payment form, a way for users to securely pay for the products. The payment form takes in three values: the card number, the card expiration, and the CVC. The next steps will involve making a much smaller form than the delivery form, but more intricate because the web app should help users enter in valid card data.
+### 4. Creating the payment form with card validation
  
-Before creating the page, hook up the path in the router at `main.js`. Although the file is not yet made, import it in as well.
- 
-main.js
+The next form in this guide is the payment form, a way for users to securely pay for the products online. The payment form takes in three values: the card number, the card expiration, and the CVC. While it's fundamentally the same as the delivery form, the payment form has extra steps because it has to properly validate card numbers.
+
+Before creating the component, hook up the component in the router at `main.js`. Although the file is not yet made, import it in too so you don't have to go back and forth.
+
+```
+// main.js
 import PaymentForm from "./components/PaymentForm.vue";
 ...
- {
-      path: "/checkout/:id",
-      name: "CheckoutPage",
-      component: CheckoutPage,
-      children: [
-        {
-          path: "deliveryform",
-          component: DeliveryForm
-        },
-        {
-          path: "paymentform",
-          component: PaymentForm
-        }
-      ]
-    }
- 
+{
+	path: "/checkout/:id",
+	name: "CheckoutPage",
+	component: CheckoutPage,
+	children: [
+		{
+			path: "deliveryform",
+			component: DeliveryForm
+		},
+		{
+			path: "paymentform",
+			component: PaymentForm
+		}
+	]
+}
+```
+
 Create `PaymentForm.vue` in the components folder and then copy and paste this code below.
- 
-PaymentForm.vue
+
+```html
+<!-- PaymentForm.vue -->
 <template>
   <form name="paymentForm" @submit="onSubmit" >
     <h3>Payment Method</h3>
@@ -767,43 +792,52 @@ button {
   margin: 20px 0;
 }
 </style>
- 
-This is a very similar file compared to the delivery form. The main difference is that it collects different information. There is one new attribute that needs introduction, which is the pattern attribute found for the expiration data field and the CVC field. 
- 
-PaymentForm.vue      
+```
+
+This is a very similar file compared to the delivery form. The main difference is the pattern attribute found for the expiration date field and the CVC field. 
+
+```html 
+<!-- PaymentForm.vue       -->
 <input type="text" class="form-control" name="expire" required @change="onChange" pattern="([0-9]{2}[/]?){2}">
+ ```
  
-The pattern attribute can accept a regex string https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions so it can detect if the user’s input is in the proper format. Explaining regex will take you down a deep rabbit hole so it will not be explained thoroughly in this guide. The regex strings are included in the code above.
+The pattern attribute can accept a [regex string](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) so it can detect if the user’s input follows proper format. Explaining regex will take you down a deep rabbit hole so it will not be explained thoroughly in this guide. The regex strings are included in the code above.
  
-Validating the card number
+#### Validating the card number
  
-Back inside of `CheckoutPage.vue`, you’ll install a credit card number validator library so your payment form can verify if the car number is valid. If you want to understand the algorithm used to determine valid card numbers, check out the Luhn’s algorithm. https://www.geeksforgeeks.org/luhn-algorithm/
+Back inside of `CheckoutPage.vue`, you’ll install a credit card number validator library so your payment form can verify card numbers. If you want to understand the algorithm used to determine valid card numbers, check out the [Luhn’s algorithm.](https://www.geeksforgeeks.org/luhn-algorithm/)
  
-To install, open the temrinal.
+To install, open the temrinal and enter.
  
-npm install creditcard.js
-Import the package in.
- 
-CheckoutPage.vue
+```npm install creditcard.js```
+
+Import the package into `CheckoutPage.vue`.
+
+```js
+// CheckoutPage.vue
 import CreditCard from "creditcard.js";
- 
-Then create a state so it can hold the validator object. The additional three states in the code below will also be explained in just a bit.
- 
-CheckoutPage.vue
-  data() {
-	...
-      validator: new CreditCard(),
-paymentForm: {},
-status: "",
-receipt: {}
-	...
-    };
-  },
- 
+```
+
+Then create a state so it can hold the validator object. Also add the three additional states below. They will be explained shortly.
+
+```js
+// CheckoutPage.vue
+data() {
+	return {
+		...
+		validator: new CreditCard(),
+		paymentForm: {},
+		status: "",
+		receipt: {}
+		...
+    }
+},
+``` 
  
 Now for the `handleOnSubmit()` method. Replace the one that’s currently in the payment form with this one.
- 
-PaymentForm.vue
+
+```js
+// PaymentForm.vue
     handleOnSubmit(e) {
       e.preventDefault();
       if (e.target.name === "deliveryForm") {
@@ -820,16 +854,15 @@ PaymentForm.vue
         }
       }
     },
+ ```
+This is the same `handleOnSubmit()` you had to copy earlier, but with some changes. The code checks which form is the submit event coming from. If it’s the payment form, it will run the validator you just installed. If the validator returns true, the card is good for transactional use. You will encounter some more regex once again. For the sake of brevity, the regex adds a space between every 4 digts in the card number. While it’s good to learn regex if you plan to create complex pattern matching, there are plenty of premade regex patterns that can be found with a quick Google search for quicker development.
  
-This is the same one you had to copy earlier, but with some changes. The code checks which form is the submit event coming from. If it’s the payment form, it will run the validator you just installed. If the validator returns true, the card is good for transactional use. You will encounter some more regex once again. For the sake of brevity, the regex adds a space after every 4th number. While it’s good to learn regex if you plan to create complex pattern matching, there are plenty of premade regex patterns that can be found with a quick Google search.
+The `const splitExpire` separates the month and years on the expire property of the paymentForm state. Split takes in a string argument so it can seperate a string into elements in an array based on where the argument exists in the string. Ie: `“12/20”` returns as `[ “12”, “20” ]`.
  
-The const splitExpire separates the month and years on the expire state of the payment form. Split takes in a string argument that tells the method to separate strings into an array based on where the argument is in the string. Ie: “12/20” returns as [ “12”, “20” ].
+The point of changing these string values is because the Commerce.js SDK can only take them in this format during the token capture. At the end of this method, the formatted values are passed into another method `handleCapture()` for later use.
  
-The point of changing these string values is because the Commerce.js SDK can only take them in this format during the token capture. At the end of this method, you’ll find the values passed into another method `handleCapture()`
+The conditional logic with the status states will notify users whether their card number is valid or not. Add this element into the template. It only appears if the status state is not an empty string.
  
-The conditional logic with the status states will send the user a message based on the validity of the credit card number. To have the status state physically appear on the user’s screen, add this element in the template under the order summary.
- 
-
 ```html
 <!-- CheckoutPage.vue -->
     <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
