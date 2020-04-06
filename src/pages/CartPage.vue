@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="cartPage-empty-h2" v-if="!ifEmpty">Cart is Empty</h2>
+    <h2 class="cartPage-empty-h2" v-if="!cartLength">Cart is Empty</h2>
     <CartItem
       v-for="product in cart.line_items"
       :product="product"
@@ -10,7 +10,7 @@
     />
     <hr>
     <div class="cartPage-subTotal-div">
-      <button v-if="ifEmpty" @click="pushToCheckoutPage" class="btn btn-primary">🔒 Secure Checkout</button>
+      <button v-if="cartLength" @click="pushToCheckoutPage" class="btn btn-primary">🔒 Secure Checkout</button>
 
       <h3
         class="cartPage-subTotal-amount"
@@ -22,7 +22,6 @@
 
 <script>
 import CartItem from "../components/CartItem.vue";
-
 export default {
   name: "CartPage",
   components: {
@@ -30,7 +29,7 @@ export default {
   },
   props: {
     cart: {
-      type: Object
+      type: Object,
     }
   },
   methods: {
@@ -48,8 +47,8 @@ export default {
     }
   },
   computed: {
-    ifEmpty() {
-      return this.cart.line_items.length > 0 ? true : false;
+    cartLength() {
+      return this.cart.line_items.length > 0 ? true : false
     }
   }
 };
@@ -59,24 +58,20 @@ export default {
 .cartPage-empty-h2 {
   margin: 10px 0;
 }
-
 .cartPage-subTotal-amount {
   margin: 10px 0;
 }
-
 .cartPage-subTotal-div {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
 }
-
 @media (max-width: 700px) {
   .cartPage-subTotal-div {
     flex-direction: column;
     margin-left: 20px;
   }
 }
-
 button {
   width: 175px;
 }

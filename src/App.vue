@@ -36,7 +36,9 @@ export default {
     return {
       products: [],
       productInView: {},
-      cart: {},
+      cart: {
+        line_items: []
+      },
       status: undefined
     };
   },

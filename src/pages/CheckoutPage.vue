@@ -1,12 +1,11 @@
 <template>
   <div>
-    <OrderSummary :live="live"/>
+    <OrderSummary v-if="live" :live="live"/>
     <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
     <router-view
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
       @onSubmit="handleOnSubmit"
-      :live="live"
       :disableStates="disableStates"
       :states="states"
       :countries="countries"
@@ -30,19 +29,14 @@ export default {
     }
   },
   data() {
-    const dummyPayment = {
-      number: "4242424242424242",
-      expire: "11/11",
-      cvc: "111"
-    };
     return {
       checkoutToken: {},
-      live: {},
+      live: undefined,
       validator: new CreditCard(),
       deliveryForm: {
         country: ""
       },
-      paymentForm: dummyPayment,
+      paymentForm: {},
       countries: {},
       states: {},
       status: "",
@@ -70,7 +64,7 @@ export default {
           }
           spacedNumber = spacedNumber.join("");
           const splitExpire = this.paymentForm.expire.split("/");
-          this.handleCaptureToken(spacedNumber, splitExpire[0], splitExpire[1]);
+          this.handleCapture(spacedNumber, splitExpire[0], splitExpire[1]);
         } else {
           this.status = "The card number you entered is invalid.";
         }
@@ -127,7 +121,7 @@ export default {
         })
         .catch(err => console.log(err));
     },
-    handleCaptureToken(number, month, year) {
+    handleCapture(number, month, year) {
       let line_items = {};
       this.live.line_items.forEach(item => {
         line_items[item.id] = { quantity: item.quantity };
