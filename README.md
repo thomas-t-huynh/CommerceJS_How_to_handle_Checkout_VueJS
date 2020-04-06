@@ -997,48 +997,55 @@ npm install moment
 The module is already imported and added into the data state for use. Using the milliseconds method, it can take in integers in values of milliseconds and then return a date object. The format method then takes a string pattern (like an easier version of regex) and then returns a date value following that format.
  
 Next is to add this subroute into `main.js`. Import and create the route object as usual.
- 
-Main.js
-import Confirmation from "./components/Confirmation.vue";
-…
-    {
-      path: "/checkout/:id",
-      name: "CheckoutPage",
-      component: CheckoutPage,
-      children: [
-        {
-          path: "deliveryform",
-          component: DeliveryForm
-        },
-        {
-          path: "paymentform",
-          component: PaymentForm
-        },
-        {
-          path: "confirmation",
-          component: Confirmation
-        }
-      ]
-    }
- 
-Now pass down the receipt state in `CheckoutPage.vue` as props into router-view so this component can make use of it.
- 
-CheckoutPage.vue
-    <router-view
-	...
-      :receipt="receipt"
-    />
- 
-Fill out the forms, make sure you use the dummy card number “4242424242424242”, an email you have (to check if you receive an automated order confirmation email), and see if it all works. The component will appear after a few seconds, and will look like this.
- 
 
-And that’s the complete checkout process.
+```js
+// Main.js
+import Confirmation from "./components/Confirmation.vue";
+...
+{
+	path: "/checkout/:id",
+	name: "CheckoutPage",
+	component: CheckoutPage,
+	children: [
+		{
+		  path: "deliveryform",
+		  component: DeliveryForm
+		},
+		{
+		  path: "paymentform",
+		  component: PaymentForm
+		},
+		{
+		  path: "confirmation",
+		  component: Confirmation
+		}
+	]
+}
+```
+
+Now pass down the receipt state in `CheckoutPage.vue` as props into router-view so the `Confirmation.vue` can make use of it.
+
+``` html
+<!-- CheckoutPage.vue -->
+<router-view
+	...
+	:receipt="receipt"
+/>
+```
+
+Fill out the forms to see if it all works. Make sure you use the dummy card number “4242424242424242”, and an email you own (to check if Chec's automated order confirmation email is intact). The component will appear after a few seconds, and will look like this.
  
-Conclusion	
-The checkout process is a long process to develop because there are so many different ways to go about it. There are many features that could be incorporated into the checkout process, especially with the flexibility that Commerce.js SDK allows for this. Thanks for reading this guide, and I hope you will find more cool things to make the checkout as user friendly as possible.
+ ![checkout](/src/assets/checkout.png)
+ 
+And that wraps up the whole checkout process!
+ 
+## Conclusion	
+
+The checkout process takes long to develop because there are so many different ways to go about it. There are many functions that could be incorporated into the checkout process, especially with a flexible SDK such as Commerece.js. Thanks for reading this guide, and I hope you will find more cool features to implement to make the checkout process more user friendly.
  
 Built With
 NPM Vue.js Bootstrap Codesandbox
-Author
-Thomas Huynh - Github
+
+## Author
+Thomas Huynh - [Github](https://github.com/thomas-t-huynh)
 
