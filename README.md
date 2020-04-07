@@ -4,7 +4,7 @@ This guide will take you through the checkout process for an eCommerce site usin
 
 Commerce.js v2 will be used in this guide.
 
-[Live_demo](https://codesandbox.io/s/github/thomas-t-huynh/CommerceJS_How_to_handle_Checkout_VueJS)
+[Live_demo](https://codesandbox.io/s/angry-sanderson-v5ob4)
 
 ## Overview
 
