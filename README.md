@@ -1,6 +1,6 @@
 # Handling Cart Checkout with Commerce.js using Vue.js
 
-This guide will guide you through the checkout process for an eCommerce site using Commerece.js and Vue.js. The checkout process gives the vendor information on where to deliver the product, and on how they will charge the customer. At the end of the process, an order confirmation is shown to verify the purchase and to summarize details about the order.
+This guide will take you through the checkout process for an eCommerce site using Commerce.js and Vue.js. The checkout process gives the vendor information on where to deliver the product, and on how they will charge the customer. At the end of the process, an order confirmation is shown to verify the purchase and to summarize details about the order.
 
 Commerce.js v2 will be used in this guide.
 
@@ -63,7 +63,7 @@ Run npm install to get all the required modules
 Npm install
 ```
 
-Run your app on a local server for development
+Start up development by running this script.
 
 ```
 Npm run serve
@@ -83,7 +83,7 @@ Access the cloned project directory with an IDE of your choice, and get ready to
 
 ### 1. Setting up the Checkout Page
 
-Buying a product online requires a large amount of information so it could arrive accurately to your doorstep. The checkout process requires info in a specific formatting such as email or country. Thankfully, there are Commerce.js methods that could help set up some form data.
+Buying a product online requires a large amount of information so it could arrive accurately to your doorstep. The checkout process requires info in specific formatting for some fields such as email or country. Thankfully, there are Commerce.js methods that could help set up some form data.
 
 Starting off, visit the `CartPage.vue`. There should be a method called `pushToCheckoutPage` attached to the checkout button in the template. The method itself is this.
 
@@ -103,7 +103,7 @@ Before working on the checkout page, go into `App.vue` and pass down commerce as
 <router-view ... :commerce="commerce" />
 ```
 
-The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of emitting, and all checkout logic will modularize in one file.
+The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of emitting, and all checkout logic will be modularized in one file.
 
 In the pages directory, create a file and name it `CheckoutPage.vue`. Copy and paste the code below to quickly get a basic layout.
 
@@ -1151,7 +1151,7 @@ And that wraps up the whole checkout process!
  
 ## Conclusion	
 
-The checkout process takes long to develop because there are so many different ways to go about it. There are many functions that could be incorporated into the checkout process, especially with a flexible SDK such as Commerece.js. Thanks for reading this guide, and I hope you will find more cool features to implement to make the checkout process more user friendly.
+The checkout process takes a long time to develop because there are so many different ways to go about it. There are many functions that could be incorporated into the checkout process, especially with a flexible SDK such as Commerece.js. Thanks for reading this guide, and I hope you will find more cool features to implement to make the checkout process more user friendly.
  
 ## Built With
 
