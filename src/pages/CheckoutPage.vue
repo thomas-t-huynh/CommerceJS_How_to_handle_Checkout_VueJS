@@ -163,6 +163,7 @@ export default {
           this.$emit("getNewCart");
         })
         .catch(err => {
+          console.log(err)
           this.shippingMethods = []
         });
     }
@@ -173,7 +174,6 @@ export default {
     }
   },
   created() {
-    // idea - include cartId in url to find cart upon refresh
     // is generatin a token everytime isntead of grabbing an existing token okay?
     const getCartId = this.$route.params.id;
     this.commerce.checkout
