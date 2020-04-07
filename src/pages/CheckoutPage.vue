@@ -92,7 +92,6 @@ export default {
           region: state
         })
         .then(res => {
-          console.log("tax", res);
           this.live = res.live;
         })
         .catch(err => console.log(err));
@@ -103,7 +102,6 @@ export default {
           region: state
         })
         .then(res => {
-          console.log("shipping", res);
           this.shippingMethods = res;
         })
         .catch(err => console.log(err));
@@ -126,7 +124,6 @@ export default {
       this.live.line_items.forEach(item => {
         line_items[item.id] = { quantity: item.quantity };
       });
-      // console.log('lineitems',line_items);
       const d = this.deliveryForm;
       const p = this.paymentForm;
       const data = {
@@ -161,13 +158,11 @@ export default {
       this.commerce.checkout
         .capture(this.checkoutToken.id, data)
         .then(res => {
-          console.log(res);
           this.receipt = res;
           this.$router.push(`/checkout/${res.id}/confirmation`);
           this.$emit("getNewCart");
         })
         .catch(err => {
-          console.log(err)
           this.shippingMethods = []
         });
     }

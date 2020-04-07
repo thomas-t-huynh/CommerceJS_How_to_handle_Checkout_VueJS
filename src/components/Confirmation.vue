@@ -10,7 +10,7 @@
         </div>
         <div class="d-flex justify-content-between">
           <h6>Order Date</h6>
-          <p>{{ moment().millisecond(1585936128).format("ddd MMM d YYYY") }}</p>
+          <p>{{ moment().millisecond(receipt.created).format("ddd MMM d YYYY") }}</p>
         </div>
       </div>
       <div class="row">
