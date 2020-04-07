@@ -145,19 +145,23 @@ Test the route by clicking the secure checkout button in `CartPage.vue`.
 
 #### Generating checkout token and using Commerce.js services
 
-With the `CheckoutPage.vue` now in place, it’s time to make use of the cart id that was passed through. There will be asynchronous calls with the Commerce.js SDK.
- In `CheckoutPage.vue`, make a `created()` method, and then add this line in it to access the params.
+With the `CheckoutPage.vue` now in place, it’s time to make use of the cart id that was passed through.
 
+In `CheckoutPage.vue`, make a `created()` method, and then add this line in it to access the params.
+
+```js
 // CheckoutPage.vue
 const getCartId = this.$route.params.id;
+```
 
 It’s always a good idea to check objects that are returned so you can find useful properties. Here’s how `this.$route` appears in the console.
 
+[checkout5](/src/assets/checkout5.png)
+ 
+The following code will be in `created()` because of their asynchronous nature. Using the commerce object that was passed down earlier, call `checkout.generatetoken()` with the `const getCardId` and an object `{ type: "cart" }`.
 
- 
-The following code will be in `created()` because of their asynchronous nature. Using the commerce that was passed down earlier, call `checkout.generatetoken()` with the getCartId const and an object with key-pair value of type and cart respectively.
- 
-CheckoutPage.vue
+```js
+// CheckoutPage.vue
     const getCartId = this.$route.params.id;
     this.commerce.checkout
       .generateToken(getCartId, { type: "cart" })
@@ -166,16 +170,16 @@ CheckoutPage.vue
         this.live = res.live;
       })
       .catch(err => console.log(err));
- 
-This method can be called with a permalink, which is why the type has to be specified. The response from the call is a checkout token that contains its ID used for capturing the token and to access built-in helper functions. Bind the token and the live property of the token to the component’s states.
- 
+```
 
+This method can be called with a permalink, which is why the type has to be specified. The response from the call is a checkout token that contains its ID used for capturing the token, and to access built-in helper functions. The token and the live property is assigned to the data states.
  
-The live object holds ‘real-time’ data on the checkout total. Helper functions that check for tax or for available shipping alters the total price of the checkout. The live object is returned when calling the helper functions.
+The live object holds ‘real-time’ data on the checkout total. Helper functions that check for tax or for available shipping can alter the total price of the checkout. The live object is returned when calling the helper functions.
 
-Create default values in the component’s data method to house the states. In addition to that, make properties for countries and states that will come in use very soon.
+Create default values in the component’s data method to house the states. In addition to that, make the properties for countries and states for the next steps.
  
- CheckoutPage.vue
+```js
+// CheckoutPage.vue
    data() {
     return {
       checkoutToken: {},
@@ -184,33 +188,39 @@ Create default values in the component’s data method to house the states. In a
       states: {},
     };
   },
- 
-Now with the checkout token in hand, call two commerce methods `services.localeListCountries(this.checkoutToken.id)` and `services.localeListSubdivisions(“US”)` in the `created()` method.
- 
-    this.commerce.services
-      .localeListCountries(this.checkoutToken.id)
-      .then(res => {
-        this.countries = { "": "Select a country", ...res.countries };
-      })
-      .catch(err => console.log(err));
- 
-    this.commerce.services
-      .localeListSubdivisions("US")
-      .then(res => {
-        this.states = { "": "Select a state", ...res.subdivisions };
-      })
-      .catch(err => console.log(err));
- 
- 
-The responses should return objects of countries and subdivisions that can be shipped out to the current checkout. The concatenated objects shown above will serve only as display values for users to select a location.
- 
-2. Creating the delivery form and handling changes
+```
 
-With the state loaded with regional data that the Chec API could understand, it’s time to make the delivery form. With VueJS, the delivery form will emit events on every keystroke, which could lead to a very dynamic form experience for users.
+Now with the checkout token in the state, call two commerce methods `services.localeListCountries(this.checkoutToken.id)` and `services.localeListSubdivisions(“US”)` in the `created()` method.
+ 
+ ```js
+ // CheckoutPage.vue
+this.commerce.services
+  .localeListCountries(this.checkoutToken.id)
+  .then(res => {
+    this.countries = { "": "Select a country", ...res.countries };
+  })
+  .catch(err => console.log(err));
+
+this.commerce.services
+  .localeListSubdivisions("US")
+  .then(res => {
+    this.states = { "": "Select a state", ...res.subdivisions };
+  })
+  .catch(err => console.log(err));
+```
+ 
+The responses should return objects of countries and subdivisions that can be shipped out to the current checkout. The concatenated objects shown above will serve only as display values for users to select a location. These returned objects will be assigned to the states you made earlier.
+ 
+### 2. Creating the delivery form and handling changes
+
+It's a good idea to grab the location data from Chec's API because it contains the locations that Chec supports, and the data is in a format that the API understands.
+
+The delivery form will emit events on every keystroke, which could lead to a very dynamic form experience for users.
  
 Create `DeliveryForm.vue` in the components folder, and then copy and paste this in.
- 
-DeliveryForm.vue
+
+```html 
+<!-- DeliveryForm.vue -->
 <template>
   <form name="deliveryForm" @submit="onSubmit">
 	Delivery form
@@ -226,40 +236,48 @@ export default {
  
 <style scoped>
 </style>
+```
+
+The name in the form will be useful later on to detect where the event is firing from.
+
+Rather than rendering `DeliveryForm.vue` as a component, this guide will introduce [nested routes](ttps://router.vuejs.org/guide/essentials/nested-routes.html). 
  
-The name in the form will be useful later on to detect where the event is firing from. Notice that the `states` and `countries` props are ready to be passed in.
- 
-Rather than rendering `DeliveryForm.vue` as a component, this guide will introduce nested routes ttps://router.vuejs.org/guide/essentials/nested-routes.html. 
- 
-Access  the router in `Main.js`, import `DeliveryForm.vue`, and add an additional property named `children` that holds an array of route objects.
- 
-main.js
+Access the router in `Main.js`, import `DeliveryForm.vue`, and add an additional property named `children` that holds an array of route objects.
+
+```js
+// main.js
 {
-     path: "/checkout/:id",
-     name: "CheckoutPage",
-     component: CheckoutPage,
-     children: [
-       {
-         path: "deliveryform",
-         component: DeliveryForm
-       }
-     ]
-   }
- 
-Nested routing allows for rendering of a route within a route itself. This will make the checkout page to be a lot like the `App.vue` page as it will host a router-view tag in its template too.
+  path: "/checkout/:id",
+  name: "CheckoutPage",
+  component: CheckoutPage,
+  children: [
+    {
+      path: "deliveryform",
+      component: DeliveryForm
+    }
+  ]
+}
+```
+
+Nested routing allows for rendering of a route within a route itself. This will make the checkout page similar to the `App.vue` page as it will host a router-view tag in its template too.
  
 The way to access the child routes is by appending the child’s path at the end of the parent route’s path.
- 
+
+```
 "/checkout/:id/deliveryform"
- 
+```
+
 This means you will have to change the link in `CartPage.vue`.
- 
- CartPage.vue
-    this.$router.push(`/checkout/${this.cart.id}/deliveryform`);
- 
-Now travel back into the `CheckoutPage.vue` and add the router-view component into the template. Bind the `countries` and `states` data states as well.
- 
-CheckoutPage.vue
+
+```js 
+CartPage.vue
+  this.$router.push(`/checkout/${this.cart.id}/deliveryform`);
+```
+
+Now travel back into the `CheckoutPage.vue` and add the router-view component into the template. Bind the `countries` and `states` data states as props.
+
+``` 
+// CheckoutPage.vue
 <template>
   <div>
     <router-view
@@ -268,12 +286,14 @@ CheckoutPage.vue
     />
   </div>
 </template>
- 
+```
+
 The delivery form should now be rendering when you visit the page!
  
 The form will need input tags to allow users to enter in their info. Below is a large amount of templating html that is self-explanatory. Copy and paste it into the `DeliveryForm.vue`.
  
-DeliveryForm.vue
+```js
+// DeliveryForm.vue
 <h3>Customer</h3>
     <div class="form-group row">
       <label for="checkout-email" class="col-sm-2 col-form-label"
@@ -441,16 +461,19 @@ DeliveryForm.vue
       }}</label>
     </div>
     <button class="btn btn-primary">Continue to Payment</button>
+```
+
 There’s a lot of information to take in here, but think of most of them as settings you can change. This guide will go over the important details.
  
-Type - Adjusts the input to based on the type of data that’s typed in. Password will hide the characters on the screen with asterisks. In this case, the “email” type will check if the email entered follows proper email format such as having an “@” symbol and a domain name following a “.”
-Required - an attribute that will prevent users from submitting data if the field is not filled out.
-Name - gives the field a name so it can be referenced in event objects. Useful to fill out the checkout page state later. 
-Select - this HTML tag has the same purpose as input because it collects data, but it has a limited range of given selections. This is good for collecting specific data that the software could understand. The option tag contains the selectable inputs.
+* Type - Setting the type will change how the input behaves based on the type. If the type is password, the field will hide the characters on the screen with asterisks. In this case, the “email” type will check if the email entered by the user follows proper email format such as having an “@” symbol and a domain name following a “.”.
+* Required - an attribute that will prevent users from submitting data if the field is not filled out.
+* Name - gives the field a name so it can be referenced in event objects. Useful to fill out the checkout page state later. 
+* Select - this HTML tag has the same purpose as input because it collects data, but it has a limited range of given selections. This is good for collecting specific data that the software is expecting. The option tag contains the selectable values.
  
-The states and countries input will be using the objects you called with the Commerce.js service methods. The state input ill be used as an example.
- 
-DeliveryForm.vue
+ The state and countries inputs will be using the state you made earlier. The state input will be used as an example below.
+
+```js
+// DeliveryForm.vue
       <select
         class="form-control col-sm-10"
         id="checkout-states"
@@ -467,36 +490,39 @@ DeliveryForm.vue
           {{ states[state] }}
         </option>
       </select>
- 
+```
  
 The v-for directive iterates through each item in an array. Although States isn’t an array, the `Object.keys()` method takes all the keys of the object passed through and returns it as an array. This allows you to use the keys as values (state codes for Commerce.js SDK) and use the actual values (readable state values) for users to select.
  
 The disabled attribute contains a boolean value return from a computed function in the checkout page. It checks if the country is “US” and if it is, it will return true so the states of the US can be selected.
- 
-CheckoutPage.vue
+
+```js
+// CheckoutPage.vue
   computed: {
     disableStates() {
       return this.deliveryForm.country === "US" ? false : true;
     }
   },
+```
  
-That being said, pass down that computed value along with the other methods and event handlers listed below.
- 
- CheckoutPage.vue
+Pass down that computed value along with the rest of the required props and event handlers that is shown below.
+
+```html 
+<!-- CheckoutPage.vue -->
 <router-view
+      ...
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
       @onSubmit="handleOnSubmit"
       :disableStates="disableStates"
-      :states="states"
-      :countries="countries"
       :shippingMethods="shippingMethods"
     />
-  </div>
+```
  
-Also, because some of these onChange events will modify the state in the checkout page, make sure to add the states in data.
- 
-CheckoutPage.vue
+Some of these onChange events will need states to assign to so make sure to add the states in the data.
+
+```js
+// CheckoutPage.vue
   data() {
     return {
       checkoutToken: {},
@@ -509,12 +535,12 @@ CheckoutPage.vue
       },
     };
   },
+``` 
  
- 
- 
-Each field has a `@change=”onChange”` event emitter so it can communicate with the parent component `CheckoutPage.vue`. It passes up an event object, which will be used to collect the input’s value. Below are the methods that will handle the onChange events.
- 
-DeliveryForm.vue
+Each field has a `@change=”onChange”` event emitter so it can communicate with the parent component `CheckoutPage.vue`. It passes up an event object, which will be used to collect the input’s value. Below are the methods that will handle the onChange events. Make sure these are included.
+
+```js
+// DeliveryForm.vue
   methods: {
     onChange(e) {
       this.$emit("onChange", e);
@@ -527,9 +553,9 @@ DeliveryForm.vue
     }
   },
   props: ["disableStates", "states", "countries", "shippingMethods"]
+```
  
- 
-Handling change events
+#### Handling change events
 
 Now you’ll create methods that will handle the change events being emitted. First off will be the handler for input changes.
 
