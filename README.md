@@ -579,7 +579,7 @@ In case you have forgotten, the form in `DeliveryForm.vue` has a name attribute 
 
 If you're curious about what else `e` has to offer , console log it to see.
  
-![checkout](/src/assets/checkout.png)
+![checkout6](/src/assets/checkout6.png)
 
 Next method will be the one inside `handleOnChange()` at the last line, `updateCheckoutSubtotal()`.
 
@@ -636,7 +636,7 @@ checkShippingAndTax(country, zip_code = "", state = "") {
 
 This method uses Commerce.js methods to grab updated shipping and tax prices based on user inputted location. A live object will return from the `setTaxZone()` call. Assign the live state to the live object so it can update the order summary later on. The `getShippingOptions()` method will return an array of available shipping methods. Assign this to the shippingMethods state so it can be used in the delivery form. The shipping method form will appear and look like this if shipping options available.
  
-![checkout](/src/assets/checkout.png)
+![checkout7](/src/assets/checkout7.png)
  
 All the fields in the delivery form use the `onChange()` method, but only the shipment selection has its own method `onShippingChange()`. The next method `setShippingMethod()`  will respond to this event emitter.
 
@@ -776,7 +776,7 @@ Add it into the template right above the delivery form component.
 ```
 The v-if directive checks if the live object exists. Remember how the default value for the live state was set as `undefined` The order summary will only render if the live object is collected from the Commerce.js calls. The component can render regardless of this directive, but it will yield warnings and errors that clouds up the console because the component will attempt to read properties from undefined props initially.
  
- ![checkout](/src/assets/checkout.png)
+ ![checkout8](/src/assets/checkout8.png)
  
 The order summary should turn out like this image above. The shipping and tax information updates as the live object gets updates from the delivery form methods.
  
@@ -1145,7 +1145,7 @@ Now pass down the receipt state in `CheckoutPage.vue` as props into router-view 
 
 Fill out the forms to see if it all works. Make sure you use the dummy card number “4242424242424242”, and an email you own (to check if Chec's automated order confirmation email is intact). The component will appear after a few seconds, and will look like this.
  
- ![checkout](/src/assets/checkout.png)
+ ![checkout9](/src/assets/checkout9.png)
  
 And that wraps up the whole checkout process!
  
