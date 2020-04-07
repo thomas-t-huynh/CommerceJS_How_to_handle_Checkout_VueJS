@@ -1,106 +1,149 @@
-Handling Cart Checkout with Commerce.js using Vue.js
+# Handling Cart Checkout with Commerce.js using Vue.js
 
-This guide will go over the checkout process for an eCommerce site using Commerece.js and Vue.js. The checkout process gives the vendor information on where to deliver the product, and on how they will charge the customer. At the end of the process, an order confirmation is shown to verify the purchase and to summarize details about the order. This guide will instruct you through three main components of the checkout process: delivery form, payment form, and order confirmation.
+This guide will guide you through the checkout process for an eCommerce site using Commerece.js and Vue.js. The checkout process gives the vendor information on where to deliver the product, and on how they will charge the customer. At the end of the process, an order confirmation is shown to verify the purchase and to summarize details about the order.
+
 Commerce.js v2 will be used in this guide.
-Live_Demo_link
-Overview
-This is a continuation of Adding Products to Cart with Commerce.JS using Vue.js by Thomas Huynh.
+
+[Live_demo](https://codesandbox.io/s/github/thomas-t-huynh/CommerceJS_How_to_handle_Checkout_VueJS)
+
+## Overview
+
+This is a continuation of [Adding Products to Cart with Commerce.JS using Vue.js](https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_cart_VueJS) by Thomas Huynh.
+
 If you haven’t done so already, create an account so you can access the Chec Dashboard and add products through your dashboard. In this guide, backpacks will be the products used for demonstration.
+
 This guide will cover:
-Cloning and installing the base project.
-Generating a checkout token to set up form fields
-Using the Commerce.js ‘live’ object to dynamically render the order summary
-Handling delivery and payment form logic
-Capturing a token and then populating the order confirmation
-Requirements
-IDE Code Editor
-NPM or yarn
-Vue JS
-Bootstrap
-Git
-Prerequisites
-Basic web development knowledge in HTML, CSS, and JS
-Some knowledge Single-page application design
-Initial Setup
-First, visit the base repo page at https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_Checkout_VueJS_BASE
+
+- Cloning and installing the base project.
+- Generating a checkout token to set up form fields
+- Using the Commerce.js ‘live’ object to dynamically render the order summary
+- Handling delivery form and payment form logic
+- Capturing a token and then showing the order confirmation
+
+## Requirements
+
+- IDE Code Editor
+- NPM or yarn
+- Vue JS
+- Bootstrap
+- Git
+
+## Prerequisites
+
+- Basic web development knowledge in HTML, CSS, and JS
+- Some knowledge Single-page application design
+
+## Initial Setup
+
+First, visit the [base repo page](https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_Checkout_VueJS_BASE)
+
 Fork your own repository.
+
+![img1](src/assets/checkout1.png)
 
 Clone or download the repo. This setup will go down the cloning path so copy the link shown in the popover.
 
+![img2](src/assets/checkout2.png)
+
 Open a terminal of your choice, find a directory to store your project, and then enter in `git clone clone-url`.
+
+```
 git clone git@github.com:thomas-t-huynh/CommerceJS_How_to_handle_Checkout_VueJS_BASE.git
+```
 
 CD into the directory.
+
+```
 Cd CommerceJS_How_to_handle_Checkout_VueJS_BASE
+```
+
 Run npm install to get all the required modules
+
+```
 Npm install
-Run the serve script found in package.json to boot up the local server
+```
+
+Run your app on a local server for development
+
+```
 Npm run serve
-Visit the localhost link shown in your terminal. 
+```
+
+Visit the localhost link shown in your terminal.
+
+![img3](src/assets/checkout3.png)
 
 The app should look like this.
 
- 
-Access the cloned project directory with your IDE of choice, and get ready to code!
- 
- 
-Project Tutorial
-1. Setting up the Checkout Page
+![img4](src/assets/checkout4.png)
 
-Buying a product online requires a large amount of information so it could arrive accurately to your doorstep. The checkout process takes in  a large amount of information that requires specific formatting such as email or country. Thankfully, Commerce.js methods could help us set up some form data for such formattings.
- 
-Starting off, visit the ‘CartPage.vue`. There should be a method called `pushToCheckoutPage` attached to the checkout button in the template. The method itself is this.
- 
-CartPage.vue 
+Access the cloned project directory with an IDE of your choice, and get ready to code!
+
+## Project Tutorial
+
+### 1. Setting up the Checkout Page
+
+Buying a product online requires a large amount of information so it could arrive accurately to your doorstep. The checkout process requires info in a specific formatting such as email or country. Thankfully, there are Commerce.js methods that could help set up some form data.
+
+Starting off, visit the `CartPage.vue`. There should be a method called `pushToCheckoutPage` attached to the checkout button in the template. The method itself is this.
+
+```js
+// CartPage.vue
 pushToCheckoutPage() {
-     this.$router.push(`/checkout/${this.cart.id}`);
-   }
- 
+    this.$router.push(`/checkout/${this.cart.id}`);
+  }
+```
+
 When a user clicks this button, it will send them to the checkout page with the delivery form on it. Passing cart id as a parameter primarily serves to get the checkout token, but it will also persist the checkout process if the page happens to refresh or if the user wants to return to the checkout page.
- 
-Before you start working on the checkout page, go into `App.vue` and pass down commerce as props into the router-view for the checkout page.
- 
-App.vue
-      <router-view
-        ...
-        :commerce="commerce"
-      />
- 
-The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of emitting, and modularize all checkout logic. 
- 
+
+Before working on the checkout page, go into `App.vue` and pass down commerce as props into the router-view for the checkout page later on.
+
+```html
+<!-- App.vue -->
+<router-view ... :commerce="commerce" />
+```
+
+The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of emitting, and all checkout logic will modularize in one file.
+
 In the pages directory, create a file and name it `CheckoutPage.vue`. Copy and paste the code below to quickly get a basic layout.
-CheckoutPage.vue
+
+```html
+<!-- CheckoutPage.vue -->
 <template>
   <div>
     CheckoutPage
   </div>
 </template>
- 
+
 <script>
-export default {
-  name: "CheckoutPage",
-  props: {
-    commerce: {
-      type: Object
-    }
-  },
-  created() {}
-};
+  export default {
+    name: "CheckoutPage",
+    props: {
+      commerce: {
+        type: Object
+      }
+    },
+    created() {}
+  };
 </script>
- 
+
 <style scoped></style>
- 
+```
+
 This is a new route that’s not hooked up to the VueRouter yet. Navigate into `main.js`, import in `CheckoutPage.vue`, and add the object containing the new route’s properties.
-main.js
-	{
-      path: "/checkout/:id",
-      name: "CheckoutPage",
-      component: CheckoutPage,
-    }
- 
-Test the route by clicking the secure checkout button in `CartPage.vue`!
- 
-Generating checkout token and using Commerce.js services
+
+```js
+//main.js
+{
+  path: "/checkout/:id",
+  name: "CheckoutPage",
+  component: CheckoutPage,
+}
+```
+
+Test the route by clicking the secure checkout button in `CartPage.vue`.
+
+#### Generating checkout token and using Commerce.js services
 
 With the `CheckoutPage.vue` now in place, it’s time to make use of the cart id that was passed through. There will be asynchronous calls with the Commerce.js SDK.
  In `CheckoutPage.vue`, make a `created()` method, and then add this line in it to access the params.
