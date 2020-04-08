@@ -76,12 +76,7 @@ export default {
       this.status = undefined;
     },
     handleGetNewCart() {
-      this.commerce.cart
-        .retrieve()
-        .then(res => {
-          this.cart = res;
-        })
-        .catch(err => console.log(err));
+      this.cart = { line_items: [] };
     }
   },
   created() {
