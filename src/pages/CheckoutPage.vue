@@ -11,6 +11,7 @@
       :countries="countries"
       :shippingMethods="shippingMethods"
       :receipt="receipt"
+      :paymentForm="paymentForm"
     />
   </div>
 </template>
@@ -29,6 +30,12 @@ export default {
     }
   },
   data() {
+    // Dummy payment data - used to prepopulate payment form for quick testing
+    const dummyPaymentData = {
+      number: "4242424242424242",
+      expire: "03/20",
+      cvc: "407"
+    };
     return {
       checkoutToken: {},
       live: undefined,
@@ -36,7 +43,7 @@ export default {
       deliveryForm: {
         country: ""
       },
-      paymentForm: {},
+      paymentForm: dummyPaymentData,
       countries: {},
       states: {},
       status: "",
@@ -58,11 +65,10 @@ export default {
         const isValidated = this.validator.isValid(this.paymentForm.number);
         if (isValidated) {
           this.status = "";
-          let spacedNumber = this.paymentForm.number.split("");
-          for (var i = 0; i < 3; i++) {
-            spacedNumber.splice((i + 1) * 4 + i, 0, " ");
-          }
-          spacedNumber = spacedNumber.join("");
+          const spacedNumber = this.paymentForm.number.replace(
+            /(\d{4}(?!\s))/g,
+            "$1 "
+          );
           const splitExpire = this.paymentForm.expire.split("/");
           this.handleCapture(spacedNumber, splitExpire[0], splitExpire[1]);
         } else {
@@ -167,8 +173,8 @@ export default {
           this.$emit("getNewCart");
         })
         .catch(err => {
-          console.log(err)
-          this.shippingMethods = []
+          console.log(err);
+          this.shippingMethods = [];
         });
     }
   },
