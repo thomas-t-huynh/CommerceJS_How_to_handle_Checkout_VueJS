@@ -1,10 +1,10 @@
 # Handling Cart Checkout with Commerce.js using Vue.js
 
-This guide will guide you through the checkout process for an eCommerce site using Commerece.js and Vue.js. The checkout process gives the vendor information on where to deliver the product, and on how they will charge the customer. At the end of the process, an order confirmation is shown to verify the purchase and to summarize details about the order.
+This guide will take you through the checkout process for an eCommerce site using Commerce.js and Vue.js. The checkout process gives the vendor information on where to deliver the product, and on how they will charge the customer. At the end of the process, an order confirmation is shown to verify the purchase and to summarize details about the order.
 
 Commerce.js v2 will be used in this guide.
 
-[Live_demo](https://codesandbox.io/s/github/thomas-t-huynh/CommerceJS_How_to_handle_Checkout_VueJS)
+[Live_demo](https://codesandbox.io/s/angry-sanderson-v5ob4)
 
 ## Overview
 
@@ -63,7 +63,7 @@ Run npm install to get all the required modules
 Npm install
 ```
 
-Run your app on a local server for development
+Start up development by running this script.
 
 ```
 Npm run serve
@@ -83,7 +83,7 @@ Access the cloned project directory with an IDE of your choice, and get ready to
 
 ### 1. Setting up the Checkout Page
 
-Buying a product online requires a large amount of information so it could arrive accurately to your doorstep. The checkout process requires info in a specific formatting such as email or country. Thankfully, there are Commerce.js methods that could help set up some form data.
+Buying a product online requires a large amount of information so it could arrive accurately to your doorstep. The checkout process requires info in specific formatting for some fields such as email or country. Thankfully, there are Commerce.js methods that could help set up some form data.
 
 Starting off, visit the `CartPage.vue`. There should be a method called `pushToCheckoutPage` attached to the checkout button in the template. The method itself is this.
 
@@ -163,6 +163,7 @@ With the `CheckoutPage.vue` now in place, it’s time to make use of the cart id
 In `CheckoutPage.vue`, make a `created()` method, and then add the following block of code in.
 
 ```js
+// CheckoutPage.vue
 created() {
     const getCartId = this.$route.params.id;
     this.commerce.checkout
@@ -1051,7 +1052,7 @@ Create `Confirmation.vue` in the component folder, and then copy and paste this 
         </div>
         <div class="d-flex justify-content-between">
           <h6>Order Date</h6>
-          <p>{{ moment().millisecond(1585936128).format("ddd MMM d YYYY") }}</p>
+          <p>{{ moment().millisecond(receipt.created).format("ddd MMM d YYYY") }}</p>
         </div>
       </div>
       <div class="row">
@@ -1158,7 +1159,7 @@ And that wraps up the whole checkout process!
  
 ## Conclusion	
 
-The checkout process takes long to develop because there are so many different ways to go about it. There are many functions that could be incorporated into the checkout process, especially with a flexible SDK such as Commerece.js. Thanks for reading this guide, and I hope you will find more cool features to implement to make the checkout process more user friendly.
+The checkout process takes a long time to develop because there are so many different ways to go about it. There are many functions that could be incorporated into the checkout process, especially with a flexible SDK such as Commerece.js. Thanks for reading this guide, and I hope you will find more cool features to implement to make the checkout process more user friendly.
  
 ## Built With
 
