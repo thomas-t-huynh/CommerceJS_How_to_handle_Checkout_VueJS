@@ -8,7 +8,7 @@ Commerce.js v2 will be used in this guide.
 
 ## Overview
 
-This is a continuation of [Adding Products to Cart with Commerce.JS using Vue.js](https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_cart_VueJS) by Thomas Huynh.
+This is a continuation of [Adding Products to Cart with Commerce.JS using Vue.js](https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_cart_VueJS).
 
 If you haven’t done so already, create an account so you can access the Chec Dashboard and add products through your dashboard. In this guide, backpacks will be the products used for demonstration.
 
@@ -103,7 +103,20 @@ Before working on the checkout page, go into `App.vue` and pass down commerce as
 <router-view ... :commerce="commerce" />
 ```
 
-The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of emitting, and all checkout logic will modularize in one file.
+The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of [emitting](https://vuejs.org/v2/guide/components.html), and all checkout logic will modularize in one file.
+
+A quick brush up on emitting. Emitting is a way for a child component to pass data up to the parent component. The child component does this by using the built-in emit method, and passes in a string argument to represent the name of the event.
+
+ `this.$emit("eventName")`
+ 
+ The parent component listens for the string that's passed in, and calls the function assigned to the listener to handle the event. The event listener is binded to the child component in the parent file.
+
+```html
+<!-- ParentFile.vue -->
+<ChildComponent
+  @eventName="handlerFunction"
+/>
+```
 
 In the pages directory, create a file and name it `CheckoutPage.vue`. Copy and paste the code below to quickly get a basic layout.
 
@@ -147,21 +160,10 @@ Test the route by clicking the secure checkout button in `CartPage.vue`.
 
 With the `CheckoutPage.vue` now in place, it’s time to make use of the cart id that was passed through.
 
-In `CheckoutPage.vue`, make a `created()` method, and then add this line in it to access the params.
+In `CheckoutPage.vue`, make a `created()` method, and then add the following block of code in.
 
 ```js
-// CheckoutPage.vue
-const getCartId = this.$route.params.id;
-```
-
-It’s always a good idea to check objects that are returned so you can find useful properties. Here’s how `this.$route` appears in the console.
-
-[checkout5](/src/assets/checkout5.png)
- 
-The following code will be in `created()` because of their asynchronous nature. Using the commerce object that was passed down earlier, call `checkout.generatetoken()` with the `const getCardId` and an object `{ type: "cart" }`.
-
-```js
-// CheckoutPage.vue
+created() {
     const getCartId = this.$route.params.id;
     this.commerce.checkout
       .generateToken(getCartId, { type: "cart" })
@@ -170,11 +172,33 @@ The following code will be in `created()` because of their asynchronous nature. 
         this.live = res.live;
       })
       .catch(err => console.log(err));
-```
 
-This method can be called with a permalink, which is why the type has to be specified. The response from the call is a checkout token that contains its ID used for capturing the token, and to access built-in helper functions. The token and the live property is assigned to the data states.
+    this.commerce.services
+      .localeListCountries(this.checkoutToken.id)
+      .then(res => {
+        this.countries = { "": "Select a country", ...res.countries };
+      })
+      .catch(err => console.log(err));
+
+    this.commerce.services
+      .localeListSubdivisions("US")
+      .then(res => {
+        this.states = { "": "Select a state", ...res.subdivisions };
+      })
+      .catch(err => console.log(err));
+  }
+```
+Okay, so starting at the top is `const getCartId = this.$route.params.id;`. This contains the id of the cart so you can retrieve the checkout token. Lets take a peek at some of the object's content.
+
+[checkout5](/src/assets/checkout5.png)
+
+It’s always a good idea to check objects that are returned so you can find useful properties. 
+
+The following Commerce.js calls is why the `created()` method is in use. [Asynchronous](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous) API calls have a delayed response so having these calls in  `created()` ensures that their returned values will be rendered.
+
+Moving on to `this.commerce.checkout.generateToken()`. This method can be called with a permalink, which is why the type has to be specified. The response from the call is a checkout token that contains its ID used for capturing the token, and to access built-in helper functions. The token and the live property is assigned to the data states.
  
-The live object holds ‘real-time’ data on the checkout total. Helper functions that check for tax or for available shipping can alter the total price of the checkout. The live object is returned when calling the helper functions.
+The live object holds ‘real-time’ data on the checkout total. Helper functions that check for tax or for available shipping can alter the total price of the checkout, and the live object returned form these functions can reflect these changes.
 
 Create default values in the component’s data method to house the states. In addition to that, make the properties for countries and states for the next steps.
  
@@ -190,24 +214,7 @@ Create default values in the component’s data method to house the states. In a
   },
 ```
 
-Now with the checkout token in the state, call two commerce methods `services.localeListCountries(this.checkoutToken.id)` and `services.localeListSubdivisions(“US”)` in the `created()` method.
- 
- ```js
- // CheckoutPage.vue
-this.commerce.services
-  .localeListCountries(this.checkoutToken.id)
-  .then(res => {
-    this.countries = { "": "Select a country", ...res.countries };
-  })
-  .catch(err => console.log(err));
-
-this.commerce.services
-  .localeListSubdivisions("US")
-  .then(res => {
-    this.states = { "": "Select a state", ...res.subdivisions };
-  })
-  .catch(err => console.log(err));
-```
+Now with the checkout token in the state, the last two methods `services.localeListCountries(this.checkoutToken.id)` and `services.localeListSubdivisions(“US”)` will be covered.
  
 The responses should return objects of countries and subdivisions that can be shipped out to the current checkout. The concatenated objects shown above will serve only as display values for users to select a location. These returned objects will be assigned to the states you made earlier.
  

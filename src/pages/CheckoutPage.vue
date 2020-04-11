@@ -174,7 +174,6 @@ export default {
     }
   },
   created() {
-    // is generatin a token everytime isntead of grabbing an existing token okay?
     const getCartId = this.$route.params.id;
     this.commerce.checkout
       .generateToken(getCartId, { type: "cart" })
