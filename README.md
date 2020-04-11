@@ -191,7 +191,7 @@ created() {
 ```
 Okay, so starting at the top is `const getCartId = this.$route.params.id;`. This contains the id of the cart so you can retrieve the checkout token. Lets take a peek at some of the object's content.
 
-[checkout5](/src/assets/checkout5.png)
+![checkout5](/src/assets/checkout5.png)
 
 It’s always a good idea to check objects that are returned so you can find useful properties. 
 
@@ -284,7 +284,7 @@ CartPage.vue
 
 Now travel back into the `CheckoutPage.vue` and add the router-view component into the template. Bind the `countries` and `states` data states as props.
 
-``` 
+```html
 // CheckoutPage.vue
 <template>
   <div>
