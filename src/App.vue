@@ -35,7 +35,7 @@ export default {
   data() {
     return {
       products: [],
-      productInView: {},
+      productInView: undefined,
       cart: {
         line_items: []
       },
@@ -80,7 +80,7 @@ export default {
     }
   },
   created() {
-    if (this.$route.params.productId && this.productInView) {
+    if (this.$route.params.productId) {
       this.commerce.products
         .retrieve(this.$route.params.productId)
         .then(res => {

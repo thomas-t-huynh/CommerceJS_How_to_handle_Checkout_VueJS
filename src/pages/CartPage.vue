@@ -10,7 +10,11 @@
     />
     <hr>
     <div class="cartPage-subTotal-div">
-      <button v-if="cartLength" @click="pushToCheckoutPage" class="btn btn-primary">🔒 Secure Checkout</button>
+      <button
+        v-if="cartLength"
+        @click="pushToCheckoutPage"
+        class="btn btn-primary"
+      >🔒 Secure Checkout</button>
 
       <h3
         class="cartPage-subTotal-amount"
@@ -29,7 +33,7 @@ export default {
   },
   props: {
     cart: {
-      type: Object,
+      type: Object
     }
   },
   methods: {
@@ -48,7 +52,7 @@ export default {
   },
   computed: {
     cartLength() {
-      return this.cart.line_items.length > 0 ? true : false
+      return this.cart.line_items.length > 0 ? true : false;
     }
   }
 };

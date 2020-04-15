@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="productInView">
     <div v-if="status" class="alert alert-success alert-dismissible fade show" role="alert">
       {{ status }}
       <button
