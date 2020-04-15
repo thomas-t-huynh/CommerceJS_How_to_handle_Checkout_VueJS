@@ -27,6 +27,9 @@ export default {
   props: {
     commerce: {
       type: Object
+    },
+    cart: {
+      type: Object
     }
   },
   data() {
@@ -52,6 +55,18 @@ export default {
     };
   },
   methods: {
+    generateToken() {
+      if (this.cart.line_items.length > 0) {
+        const getCartId = this.$route.params.id;
+        this.commerce.checkout
+          .generateToken(getCartId, { type: "cart" })
+          .then(res => {
+            this.checkoutToken = res;
+            this.live = res.live;
+          })
+          .catch(err => console.log(err));
+      }
+    },
     handleOnChange(e) {
       const { form, name, value } = e.target;
       this[form.name][name] = value;
@@ -164,6 +179,7 @@ export default {
       this.commerce.checkout
         .capture(this.checkoutToken.id, data)
         .then(res => {
+          console.log(res);
           this.receipt = res;
           this.$router.push(`/checkout/${res.id}/confirmation`);
           this.$emit("getNewCart");
@@ -180,15 +196,16 @@ export default {
     }
   },
   created() {
-    const getCartId = this.$route.params.id;
-    this.commerce.checkout
-      .generateToken(getCartId, { type: "cart" })
-      .then(res => {
-        this.checkoutToken = res;
-        this.live = res.live;
-      })
-      .catch(err => console.log(err));
-
+    // const getCartId = this.$route.params.id;
+    // this.commerce.checkout
+    //   .generateToken(getCartId, { type: "cart" })
+    //   .then(res => {
+    //     console.log(res);
+    //     this.checkoutToken = res;
+    //     this.live = res.live;
+    //   })
+    //   .catch(err => console.log(err));
+    this.generateToken();
     this.commerce.services
       .localeListCountries(this.checkoutToken.id)
       .then(res => {

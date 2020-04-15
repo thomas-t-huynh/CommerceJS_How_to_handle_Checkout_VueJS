@@ -4,7 +4,7 @@ This guide will take you through the checkout process for an eCommerce site usin
 
 Commerce.js v2 will be used in this guide.
 
-[Live_demo](https://codesandbox.io/s/angry-sanderson-v5ob4)
+[Live_demo](https://codesandbox.io/s/nervous-leaf-dfqzl)
 
 ## Overview
 
@@ -466,12 +466,7 @@ The form will need input tags to allow users to enter in their info. Below is a 
     <button class="btn btn-primary">Continue to Payment</button>
 ```
 
-There’s a lot of information to take in here, but think of most of them as settings you can change. This guide will go over the important details.
-
-- Type - Setting the type will change how the input behaves based on the type. If the type is password, the field will hide the characters on the screen with asterisks. In this case, the “email” type will check if the email entered by the user follows proper email format such as having an “@” symbol and a domain name following a “.”.
-- Required - an attribute that will prevent users from submitting data if the field is not filled out.
-- Name - gives the field a name so it can be referenced in event objects. Useful to fill out the checkout page state later.
-- Select - this HTML tag has the same purpose as input because it collects data, but it has a limited range of given selections. This is good for collecting specific data that the software is expecting. The option tag contains the selectable values.
+Most of the logic here is handled by HTML attributes and tags. You can think of them as settings you can change. Some of the more notable HTML features found here are [Type](https://www.w3schools.com/tags/att_input_type.asp), [Required](https://www.w3schools.com/tags/att_input_required.asp), [Name](https://www.w3schools.com/tags/att_input_name.asp), and [Select](https://www.w3schools.com/tags/tag_select.asp).
 
 The state and countries inputs will be using the state you made earlier. The state input will be used as an example below.
 
@@ -1072,7 +1067,8 @@ Create `Confirmation.vue` in the component folder, and then copy and paste this 
         <div class="d-flex justify-content-between">
           <h6>Order Date</h6>
           <p>
-            {{ moment().millisecond(receipt.created).format("ddd MMM d YYYY") }}
+            {{ moment().millisecond(receipt.created/1000).format("ddd MMM D
+            YYYY") }}
           </p>
         </div>
       </div>

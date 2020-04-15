@@ -6,11 +6,11 @@
       <div class="confirmation-order_info">
         <div class="d-flex justify-content-between">
           <h6>Order Number</h6>
-          <p>{{ receipt.id }}</p>
+          <p>{{ receipt.customer_reference }}</p>
         </div>
         <div class="d-flex justify-content-between">
           <h6>Order Date</h6>
-          <p>{{ moment().millisecond(receipt.created).format("ddd MMM d YYYY") }}</p>
+          <p>{{ moment().millisecond(receipt.created/1000).format("ddd MMM D YYYY") }}</p>
         </div>
       </div>
       <div class="row">
