@@ -8,7 +8,7 @@ Commerce.js v2 will be used in this guide.
 
 ## Overview
 
-This is a continuation of [Adding Products to Cart with Commerce.JS using Vue.js](https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_cart_VueJS).
+This is a continuation of [Adding Products to Cart with Commerce.JS using Vue.js](https://codesandbox.io/s/sad-snow-434s3).
 
 If you haven’t done so already, create an account so you can access the Chec Dashboard and add products through your dashboard. In this guide, backpacks will be the products used for demonstration.
 
@@ -96,14 +96,14 @@ pushToCheckoutPage() {
 
 When a user clicks this button, it will send them to the checkout page with the delivery form on it. Passing cart id as a parameter primarily serves to get the checkout token, but it will also persist the checkout process if the page happens to refresh or if the user wants to return to the checkout page.
 
-Before working on the checkout page, go into `App.vue` and pass down commerce as props into the router-view for the checkout page later on.
+Before working on the checkout page, go into `App.vue` and pass down commerce and checkoutToken as props into the router-view for the checkout page later on.
 
 ```html
 <!-- App.vue -->
-<router-view ... :commerce="commerce" />
+<router-view ... :commerce="commerce" checkoutToken="checkoutToken" />
 ```
 
-The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of [emitting](https://vuejs.org/v2/guide/components.html), and all checkout logic will modularize in one file.
+First prop is the Commerce.js Object. The SDK will be used very often during the checkout process, and it can be completely managed by `CheckoutPage.vue`. This will prevent multiple levels of [emitting](https://vuejs.org/v2/guide/components.html), and all checkout logic will modularize in one file.
 
 A quick brush up on emitting. Emitting is a way for a child component to pass data up to the parent component. The child component does this by using the built-in emit method, and passes in a string argument to represent the name of the event.
 
@@ -115,8 +115,37 @@ The parent component listens for the string that's passed in, and calls the func
 <!-- ParentFile.vue -->
 <ChildComponent @eventName="handlerFunction" />
 ```
+Second prop is the checkout token. The checkout token is not generated yet, and the following steps will cover that.
 
-In the pages directory, create a file and name it `CheckoutPage.vue`. Copy and paste the code below to quickly get a basic layout.
+You'll be using a Vue property method [Watcher](https://vuejs.org/v2/guide/computed.html#Watchers). A watcher behaves the way its name implies, it will watch for changes in a specified data state or prop and then respond with its assigned code. 
+
+```js
+// App.vue
+  watch: {
+    cart(newCart, oldCart) {
+      if (newCart.line_items.length > 0) {
+        this.generateToken(this.cart.id);
+      }
+    }
+  },
+```
+
+The function is named after the prop or data you want to watch, and the parameters have access to the previous data and the new data. This function checks if the updated cart object has one item or more, it will call `this.generateToken()`. Copy this function and paste it inside of the methods.
+
+```js
+// App.vue
+    generateToken(cartId) {
+      this.commerce.checkout
+        .generateToken(cartId, { type: "cart" })
+        .then(res => {
+          this.checkoutToken = res;
+        })
+        .catch(err => console.log(err));
+    },
+```
+`this.commerce.checkout.generateToken()` can be called with a permalink, which is why the type has to be specified. The response from the call is a checkout token that contains its ID used for capturing the token, and to access built-in helper functions. The token is assigned to the data states.
+
+With the `App.vue` now set up, the checkout page should be ready for some code. In the pages directory, create a file and name it `CheckoutPage.vue`. Copy and paste the code below to quickly get a basic layout.
 
 ```html
 <!-- CheckoutPage.vue -->
@@ -132,6 +161,10 @@ In the pages directory, create a file and name it `CheckoutPage.vue`. Copy and p
     props: {
       commerce: {
         type: Object
+      },
+      checkoutToken: {
+        type: Object,
+        required: true
       }
     },
     created() {}
@@ -158,20 +191,29 @@ Test the route by clicking the secure checkout button in `CartPage.vue`.
 
 With the `CheckoutPage.vue` now in place, it’s time to make use of the cart id that was passed through.
 
+Create default values in the component’s data method to house the states. In addition to that, make the properties for countries and states for the next steps.
+
+```js
+// CheckoutPage.vue
+   data() {
+    return {
+      checkoutToken: {},
+      live: this.checkoutToken.live,
+      countries: {},
+      states: {},
+    };
+  },
+```
+
+The live object holds ‘real-time’ data on the checkout total. Helper functions that check for tax or for available shipping can alter the total price of the checkout, and the live object returned form these functions can reflect these changes.
+
 In `CheckoutPage.vue`, make a `created()` method, and then add the following block of code in.
+
+The following Commerce.js calls is why the `created()` method is in use. [Asynchronous](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous) API calls have a delayed response so having these calls in `created()` ensures that their returned values will be rendered.
 
 ```js
 // CheckoutPage.vue
 created() {
-    const getCartId = this.$route.params.id;
-    this.commerce.checkout
-      .generateToken(getCartId, { type: "cart" })
-      .then(res => {
-        this.checkoutToken = res;
-        this.live = res.live;
-      })
-      .catch(err => console.log(err));
-
     this.commerce.services
       .localeListCountries(this.checkoutToken.id)
       .then(res => {
@@ -187,34 +229,6 @@ created() {
       .catch(err => console.log(err));
   }
 ```
-
-Okay, so starting at the top is `const getCartId = this.$route.params.id;`. This contains the id of the cart so you can retrieve the checkout token. Lets take a peek at some of the object's content.
-
-![checkout5](/src/assets/checkout5.png)
-
-It’s always a good idea to check objects that are returned so you can find useful properties.
-
-The following Commerce.js calls is why the `created()` method is in use. [Asynchronous](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous) API calls have a delayed response so having these calls in `created()` ensures that their returned values will be rendered.
-
-Moving on to `this.commerce.checkout.generateToken()`. This method can be called with a permalink, which is why the type has to be specified. The response from the call is a checkout token that contains its ID used for capturing the token, and to access built-in helper functions. The token and the live property is assigned to the data states.
-
-The live object holds ‘real-time’ data on the checkout total. Helper functions that check for tax or for available shipping can alter the total price of the checkout, and the live object returned form these functions can reflect these changes.
-
-Create default values in the component’s data method to house the states. In addition to that, make the properties for countries and states for the next steps.
-
-```js
-// CheckoutPage.vue
-   data() {
-    return {
-      checkoutToken: {},
-      live: undefined,
-      countries: {},
-      states: {},
-    };
-  },
-```
-
-Now with the checkout token in the state, the last two methods `services.localeListCountries(this.checkoutToken.id)` and `services.localeListSubdivisions(“US”)` will be covered.
 
 The responses should return objects of countries and subdivisions that can be shipped out to the current checkout. The concatenated objects shown above will serve only as display values for users to select a location. These returned objects will be assigned to the states you made earlier.
 
@@ -660,12 +674,19 @@ The method will take the shipment ID passed from the delivery form and then use 
 ```js
 // CheckoutPage.vue
 handleOnSubmit(e) {
-	e.preventDefault();
-  this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
+  e.preventDefault();
+  if (this.deliveryForm.shipping_method) {
+    this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
+  } else {
+    this.status = "Delivery must have a shipping method.";
+    window.scrollTo(0, 0);
+  }
 }
 ```
 
 The last method handles the onSubmit emit. It pushes the user to the payment form route. The prevent default method for the event object stops the usual effect of page refreshing when forms are submitted. The reload is unnecessary, causes slowdowns in user experience, and erases state data that will be used later.
+
+It also checks if the shipping method property on the delivery form is filled out. If not, a status message will be assigned and is, therefore, revealed to the customer. The customer should not be able to order the product because the store's shipping isn't available in their location.
 
 The delivery form should now be complete!
 
@@ -929,20 +950,30 @@ Now for the `handleOnSubmit()` method. Replace the one that’s currently in the
 
 ```js
 // PaymentForm.vue
-    handleOnSubmit(e) {
+ handleOnSubmit(e) {
       e.preventDefault();
-      if (e.target.name === "deliveryForm") {
+      if (
+        e.target.name === "deliveryForm" &&
+        this.deliveryForm.shipping_method
+      ) {
+        this.status = "";
         this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
-      } else {
+      } else if (e.target.name === "paymentForm") {
         const isValidated = this.validator.isValid(this.paymentForm.number);
         if (isValidated) {
           this.status = "";
-          const spacedNumber = this.paymentForm.number.replace(/(\d{4}(?!\s))/g, "$1 ")
+          const spacedNumber = this.paymentForm.number.replace(
+            /(\d{4}(?!\s))/g,
+            "$1 "
+          );
           const splitExpire = this.paymentForm.expire.split("/");
           this.handleCapture(spacedNumber, splitExpire[0], splitExpire[1]);
         } else {
           this.status = "The card number you entered is invalid.";
         }
+      } else {
+        this.status = "Delivery must have a shipping method.";
+        window.scrollTo(0, 0);
       }
     },
 ```
@@ -1062,7 +1093,7 @@ Create `Confirmation.vue` in the component folder, and then copy and paste this 
       <div class="confirmation-order_info">
         <div class="d-flex justify-content-between">
           <h6>Order Number</h6>
-          <p>{{ receipt.id }}</p>
+          <p>{{ receipt.customer_reference }}</p>
         </div>
         <div class="d-flex justify-content-between">
           <h6>Order Date</h6>
