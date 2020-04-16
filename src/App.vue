@@ -13,6 +13,7 @@
         @updateItemQuantity="handleUpdateItemQuantity"
         @removeItem="handleRemoveItem"
         :commerce="commerce"
+        :checkoutToken="checkoutToken"
         @getNewCart="handleGetNewCart"
       />
     </div>
@@ -39,10 +40,19 @@ export default {
       cart: {
         line_items: []
       },
-      status: undefined
+      status: undefined,
+      checkoutToken: {}
     };
   },
   methods: {
+    generateToken(cartId) {
+      this.commerce.checkout
+        .generateToken(cartId, { type: "cart" })
+        .then(res => {
+          this.checkoutToken = res;
+        })
+        .catch(err => console.log(err));
+    },
     handleViewProduct(product) {
       this.productInView = product;
       this.status = undefined;
@@ -79,6 +89,13 @@ export default {
       this.cart = { line_items: [] };
     }
   },
+  watch: {
+    cart(newCart, oldCart) {
+      if (newCart.line_items.length > 0) {
+        this.generateToken(this.cart.id);
+      }
+    }
+  },
   created() {
     if (this.$route.params.productId) {
       this.commerce.products
@@ -101,6 +118,10 @@ export default {
         this.cart = res;
       })
       .catch(err => console.log(err));
+
+    if (this.$route.params.id) {
+      this.generateToken(this.$route.params.id);
+    }
   }
 };
 </script>

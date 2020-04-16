@@ -30,18 +30,22 @@ export default {
     },
     cart: {
       type: Object
+    },
+    checkoutToken: {
+      type: Object,
+      required: true
     }
   },
   data() {
     // Dummy payment data - used to prepopulate payment form for quick testing
+    console.log(this.checkoutToken);
     const dummyPaymentData = {
       number: "4242424242424242",
       expire: "03/20",
       cvc: "407"
     };
     return {
-      checkoutToken: {},
-      live: undefined,
+      live: this.checkoutToken.live,
       validator: new CreditCard(),
       deliveryForm: {
         country: ""
@@ -55,18 +59,6 @@ export default {
     };
   },
   methods: {
-    generateToken() {
-      if (this.cart.line_items.length > 0) {
-        const getCartId = this.$route.params.id;
-        this.commerce.checkout
-          .generateToken(getCartId, { type: "cart" })
-          .then(res => {
-            this.checkoutToken = res;
-            this.live = res.live;
-          })
-          .catch(err => console.log(err));
-      }
-    },
     handleOnChange(e) {
       const { form, name, value } = e.target;
       this[form.name][name] = value;
@@ -179,9 +171,8 @@ export default {
       this.commerce.checkout
         .capture(this.checkoutToken.id, data)
         .then(res => {
-          console.log(res);
           this.receipt = res;
-          this.$router.push(`/checkout/${res.id}/confirmation`);
+          this.$router.push(`/checkout/${res.customer_reference}/confirmation`);
           this.$emit("getNewCart");
         })
         .catch(err => {
@@ -195,24 +186,18 @@ export default {
       return this.deliveryForm.country === "US" ? false : true;
     }
   },
+  watch: {
+    checkoutToken() {
+      this.live = this.checkoutToken.live;
+    }
+  },
   created() {
-    // const getCartId = this.$route.params.id;
-    // this.commerce.checkout
-    //   .generateToken(getCartId, { type: "cart" })
-    //   .then(res => {
-    //     console.log(res);
-    //     this.checkoutToken = res;
-    //     this.live = res.live;
-    //   })
-    //   .catch(err => console.log(err));
-    this.generateToken();
     this.commerce.services
       .localeListCountries(this.checkoutToken.id)
       .then(res => {
         this.countries = { "": "Select a country", ...res.countries };
       })
       .catch(err => console.log(err));
-
     this.commerce.services
       .localeListSubdivisions("US")
       .then(res => {
