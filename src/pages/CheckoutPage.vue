@@ -1,7 +1,12 @@
 <template>
   <div>
     <OrderSummary v-if="live" :live="live"/>
-    <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
+    <div
+      id="status-message"
+      v-if="status"
+      class="alert alert-danger fade show"
+      role="alert"
+    >{{ status }}</div>
     <router-view
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
@@ -38,7 +43,7 @@ export default {
   },
   data() {
     // Dummy payment data - used to prepopulate payment form for quick testing
-    console.log(this.checkoutToken);
+
     const dummyPaymentData = {
       number: "4242424242424242",
       expire: "03/20",
@@ -66,9 +71,13 @@ export default {
     },
     handleOnSubmit(e) {
       e.preventDefault();
-      if (e.target.name === "deliveryForm") {
+      if (
+        e.target.name === "deliveryForm" &&
+        this.deliveryForm.shipping_method
+      ) {
+        this.status = "";
         this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
-      } else {
+      } else if (e.target.name === "paymentForm") {
         const isValidated = this.validator.isValid(this.paymentForm.number);
         if (isValidated) {
           this.status = "";
@@ -81,6 +90,9 @@ export default {
         } else {
           this.status = "The card number you entered is invalid.";
         }
+      } else {
+        this.status = "Delivery must have a shipping method.";
+        window.scrollTo(0, 0);
       }
     },
     updateCheckoutSubtotal() {
@@ -117,9 +129,16 @@ export default {
         .then(res => {
           this.shippingMethods = res;
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          console.log(err);
+          this.status = err.data.error.message;
+          this.shippingMethods = [];
+          this.deliveryForm.shipping_method = "";
+          window.scrollTo(0, 0);
+        });
     },
     setShippingMethod(shippingId) {
+      this.deliveryForm.shipping_method = shippingId;
       this.commerce.checkout
         .checkShippingOption(this.checkoutToken.id, {
           shipping_option_id: shippingId,
@@ -127,10 +146,12 @@ export default {
           region: this.deliveryForm.state
         })
         .then(res => {
-          this.deliveryForm.shipping_method = shippingId;
           this.live = res.live;
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          this.deliveryForm.shipping_method = "";
+          console.log(err);
+        });
     },
     handleCapture(number, month, year) {
       let line_items = {};
