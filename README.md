@@ -680,7 +680,7 @@ handleOnSubmit(e) {
     this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
   } else {
     this.status = "Delivery must have a shipping method.";
-    window.scrollTo(0, 0);
+    document.getElementById("OrderSummary").scrollIntoView();
   }
 }
 ```
@@ -793,11 +793,13 @@ Add it into the template right above the delivery form component.
 
 ```html
 <!-- CheckoutPage.vue -->
-<OrderSummary v-if="”live”" :live="live" />
+<OrderSummary v-if="”live”" :live="live" id="OrderSummary" />
 <router-view ... />
 ```
 
-The v-if directive checks if the live object exists. Remember how the default value for the live state was set as `undefined` The order summary will only render if the live object is collected from the Commerce.js calls. The component can render regardless of this directive, but it will yield warnings and errors that clouds up the console because the component will attempt to read properties from undefined props initially.
+The v-if directive checks if the live object exists. Remember how the default value for the live state was set as `undefined`? The order summary will only render if the live object is collected from the Commerce.js calls. The component can render regardless of this directive, but it will yield warnings and errors that clouds up the console because the component will attempt to read properties from undefined props initially.
+
+The id is assigned to order summary so the page can scroll up if any error messages appear.
 
 ![checkout8](/src/assets/checkout8.png)
 
@@ -974,7 +976,7 @@ Now for the `handleOnSubmit()` method. Replace the one that’s currently in the
         }
       } else {
         this.status = "Delivery must have a shipping method.";
-        window.scrollTo(0, 0);
+        document.getElementById("OrderSummary").scrollIntoView();
       }
     },
 ```
