@@ -463,7 +463,7 @@ The form will need input tags to allow users to enter in their info. Below is a 
         required
       />
     </div>
-    <h5 v-if="shippingMethods.length > 0">Shipping Method</h5>
+    <h5>Shipping Method</h5>
     <div v-for="method in shippingMethods" :key="method.id" class="form-check">
       <input
         class="form-check-input"
@@ -477,6 +477,7 @@ The form will need input tags to allow users to enter in their info. Below is a 
         method.description
       }}</label>
     </div>
+    <p v-if="shippingMethods.length === 0">No shipping methods currently available.</p>
     <button class="btn btn-primary">Continue to Payment</button>
 ```
 
