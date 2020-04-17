@@ -4,7 +4,7 @@ This guide will take you through the checkout process for an eCommerce site usin
 
 Commerce.js v2 will be used in this guide.
 
-[Live_demo](https://codesandbox.io/s/nervous-leaf-dfqzl)
+[Live_demo](https://codesandbox.io/s/commercejs-checkout-demo-dfqzl)
 
 ## Overview
 
