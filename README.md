@@ -187,17 +187,16 @@ This is a new route that’s not hooked up to the VueRouter yet. Navigate into `
 
 Test the route by clicking the secure checkout button in `CartPage.vue`.
 
-#### Generating checkout token and using Commerce.js services
+#### Utilizing the checkout token
 
-With the `CheckoutPage.vue` now in place, it’s time to make use of the cart id that was passed through.
+With the `CheckoutPage.vue` now in place, it’s time to make use of the checkout token that was passed through.
 
-Create default values in the component’s data method to house the states. In addition to that, make the properties for countries and states for the next steps.
+Create default values in the component’s data method for the live token. In addition to that, make the properties for countries and states for the next steps.
 
 ```js
 // CheckoutPage.vue
    data() {
     return {
-      checkoutToken: {},
       live: this.checkoutToken.live,
       countries: {},
       states: {},
