@@ -1,6 +1,6 @@
 <template>
   <div>
-    <OrderSummary v-if="live" :live="live"/>
+    <OrderSummary v-if="live" :live="live" id="OrderSummary"/>
     <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
     <router-view
       @onChange="handleOnChange"
@@ -38,7 +38,7 @@ export default {
   },
   data() {
     // Dummy payment data - used to prepopulate payment form for quick testing
-    console.log(this.checkoutToken);
+
     const dummyPaymentData = {
       number: "4242424242424242",
       expire: "03/20",
@@ -66,9 +66,13 @@ export default {
     },
     handleOnSubmit(e) {
       e.preventDefault();
-      if (e.target.name === "deliveryForm") {
+      if (
+        e.target.name === "deliveryForm" &&
+        this.deliveryForm.shipping_method
+      ) {
+        this.status = "";
         this.$router.push(`/checkout/${this.$route.params.id}/paymentform`);
-      } else {
+      } else if (e.target.name === "paymentForm") {
         const isValidated = this.validator.isValid(this.paymentForm.number);
         if (isValidated) {
           this.status = "";
@@ -81,6 +85,9 @@ export default {
         } else {
           this.status = "The card number you entered is invalid.";
         }
+      } else {
+        this.status = "Delivery must have a shipping method.";
+        document.getElementById("OrderSummary").scrollIntoView();
       }
     },
     updateCheckoutSubtotal() {
@@ -117,7 +124,11 @@ export default {
         .then(res => {
           this.shippingMethods = res;
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          console.log(err);
+          this.shippingMethods = [];
+          this.deliveryForm.shipping_method = "";
+        });
     },
     setShippingMethod(shippingId) {
       this.commerce.checkout
