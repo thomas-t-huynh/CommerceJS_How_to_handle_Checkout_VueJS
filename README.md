@@ -1,4 +1,4 @@
-# Handling Cart Checkout with Commerce.js using Vue.js
+# Handling the Checkout with Commerce.js using Vue.js
 
 This guide will take you through the checkout process for an eCommerce site using Commerce.js and Vue.js. The checkout process gives the vendor information on where to deliver the product, and on how they will charge the customer. At the end of the process, an order confirmation is shown to verify the purchase and to summarize details about the order.
 
@@ -8,9 +8,9 @@ Commerce.js v2 will be used in this guide.
 
 ## Overview
 
-This is a continuation of [Adding Products to Cart with Commerce.JS using Vue.js](https://codesandbox.io/s/sad-snow-434s3).
+This is a continuation of the example [Adding Products to Cart with Commerce.JS using Vue.js](https://codesandbox.io/s/sad-snow-434s3), and [this guide](https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_cart_VueJS/blob/master/README.md).
 
-If you haven’t done so already, create an account so you can access the Chec Dashboard and add products through your dashboard. In this guide, backpacks will be the products used for demonstration.
+If you haven’t done so already, create an account so you can access the Chec Dashboard and add products through your dashboard. In this guide, backpacks (instead of car rims) will be the demo products used.
 
 This guide will cover:
 
@@ -1210,7 +1210,13 @@ And that wraps up the whole checkout process!
 
 ## Conclusion
 
-The checkout process takes a long time to develop because there are so many different ways to go about it. There are many functions that could be incorporated into the checkout process, especially with a flexible SDK such as Commerece.js. Thanks for reading this guide, and I hope you will find more cool features to implement to make the checkout process more user friendly.
+The checkout form by far takes the most time to develop due to all the variable changes that can occur based on customer input. There are many additional functions that could be incorporated into the checkout process, especially with a flexible SDK such as Commerece.js. Hopefully you now have a basic undertsanding of how to build a checkout form with Vue.js and continue to find other cool features to implement to make the checkout process more user friendly.
+
+This guide is a continuation of a previous guide 
+
+- [Adding Products to Cart with Commerce.JS using Vue.js](https://github.com/thomas-t-huynh/CommerceJS_How_to_handle_cart_VueJS/blob/master/README.md).
+
+[LIVE DEMO](https://codesandbox.io/s/sad-snow-434s3)
 
 ## Built With
 
