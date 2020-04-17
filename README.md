@@ -115,9 +115,9 @@ The parent component listens for the string that's passed in, and calls the func
 <!-- ParentFile.vue -->
 <ChildComponent @eventName="handlerFunction" />
 ```
-Second prop is the checkout token. The checkout token is not generated yet, and the following steps will cover that.
+Second prop is the checkout token. The checkout token is not generated yet so the following steps will cover that.
 
-You'll be using a Vue property method [Watcher](https://vuejs.org/v2/guide/computed.html#Watchers). A watcher behaves the way its name implies, it will watch for changes in a specified data state or prop and then respond with its assigned code. 
+You'll be using a Vue property method called [Watcher](https://vuejs.org/v2/guide/computed.html#Watchers). A watcher behaves the way its name implies, it will watch for changes in a specified data state or prop and then respond with its assigned code. 
 
 ```js
 // App.vue
@@ -130,7 +130,7 @@ You'll be using a Vue property method [Watcher](https://vuejs.org/v2/guide/compu
   },
 ```
 
-The function is named after the prop or data you want to watch, and the parameters have access to the previous data and the new data. This function checks if the updated cart object has one item or more, it will call `this.generateToken()`. Copy this function and paste it inside of the methods.
+The function is named after the prop or data you want to watch, and the parameters have access to the previous data and the new data. This function checks if the updated cart object has one or more items in the cart. If so, it will call `this.generateToken()`, which is the code below. Copy and paste it into Methods.
 
 ```js
 // App.vue
@@ -207,9 +207,9 @@ Create default values in the component’s data method to house the states. In a
 
 The live object holds ‘real-time’ data on the checkout total. Helper functions that check for tax or for available shipping can alter the total price of the checkout, and the live object returned form these functions can reflect these changes.
 
-In `CheckoutPage.vue`, make a `created()` method, and then add the following block of code in.
-
 The following Commerce.js calls is why the `created()` method is in use. [Asynchronous](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous) API calls have a delayed response so having these calls in `created()` ensures that their returned values will be rendered.
+
+In `CheckoutPage.vue`, make a `created()` method, and then add the following block of code in.
 
 ```js
 // CheckoutPage.vue
@@ -687,7 +687,7 @@ handleOnSubmit(e) {
 
 The last method handles the onSubmit emit. It pushes the user to the payment form route. The prevent default method for the event object stops the usual effect of page refreshing when forms are submitted. The reload is unnecessary, causes slowdowns in user experience, and erases state data that will be used later.
 
-It also checks if the shipping method property on the delivery form is filled out. If not, a status message will be assigned and is, therefore, revealed to the customer. The customer should not be able to order the product because the store's shipping isn't available in their location.
+It also checks if the shipping method property on the delivery form is filled out. If there's none, a status message will be assigned and then revealed to the customer. A shipping method is required because the store can't ship to a location it doesn't supply to. 
 
 The delivery form should now be complete!
 
