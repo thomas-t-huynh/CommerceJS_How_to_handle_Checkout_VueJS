@@ -2,6 +2,7 @@
   <div>
     <OrderSummary v-if="live" :live="live" id="OrderSummary"/>
     <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
+
     <router-view
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
@@ -131,6 +132,7 @@ export default {
         });
     },
     setShippingMethod(shippingId) {
+      this.deliveryForm.shipping_method = shippingId;
       this.commerce.checkout
         .checkShippingOption(this.checkoutToken.id, {
           shipping_option_id: shippingId,
@@ -138,10 +140,12 @@ export default {
           region: this.deliveryForm.state
         })
         .then(res => {
-          this.deliveryForm.shipping_method = shippingId;
           this.live = res.live;
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          this.deliveryForm.shipping_method = "";
+          console.log(err);
+        });
     },
     handleCapture(number, month, year) {
       let line_items = {};
