@@ -1,12 +1,8 @@
 <template>
   <div>
-    <OrderSummary v-if="live" :live="live"/>
-    <div
-      id="status-message"
-      v-if="status"
-      class="alert alert-danger fade show"
-      role="alert"
-    >{{ status }}</div>
+    <OrderSummary v-if="live" :live="live" id="OrderSummary"/>
+    <div v-if="status" class="alert alert-danger fade show" role="alert">{{ status }}</div>
+
     <router-view
       @onChange="handleOnChange"
       @onShippingChange="setShippingMethod"
@@ -92,7 +88,7 @@ export default {
         }
       } else {
         this.status = "Delivery must have a shipping method.";
-        window.scrollTo(0, 0);
+        document.getElementById("OrderSummary").scrollIntoView();
       }
     },
     updateCheckoutSubtotal() {
@@ -131,10 +127,8 @@ export default {
         })
         .catch(err => {
           console.log(err);
-          this.status = err.data.error.message;
           this.shippingMethods = [];
           this.deliveryForm.shipping_method = "";
-          window.scrollTo(0, 0);
         });
     },
     setShippingMethod(shippingId) {
